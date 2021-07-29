@@ -1,4 +1,0 @@
-/Users/damian/Documents/Studium/BA-2021/hog2/build/cmake/CMakeFiles/rebuild_cache.dir
-/Users/damian/Documents/Studium/BA-2021/hog2/build/cmake/CMakeFiles/edit_cache.dir
-/Users/damian/Documents/Studium/BA-2021/hog2/build/cmake/CMakeFiles/CMakeTest.dir
-/Users/damian/Documents/Studium/BA-2021/hog2/build/cmake/CMakeFiles/HogCore.dir
