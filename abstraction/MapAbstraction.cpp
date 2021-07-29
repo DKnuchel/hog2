@@ -46,7 +46,7 @@ void MapAbstraction::GetTileFromNode(node *n, int &x, int &y)
 	y = n->GetLabelL(kFirstData+1);
 	//printf("(%d, %d) in x/y\n", x, y);
 }
-
+/*
 void MapAbstraction::ToggleDrawAbstraction(int which)
 {
 	bool drawThis = ((levelDraw>>which)&0x1);
@@ -55,7 +55,8 @@ void MapAbstraction::ToggleDrawAbstraction(int which)
 	else
 		levelDraw = levelDraw&(~(1<<which));
 }
-
+*/
+/*
 void MapAbstraction::OpenGLDraw() const
 {
 	for (unsigned int x = 0; x < abstractions.size(); x++)
@@ -65,8 +66,8 @@ void MapAbstraction::OpenGLDraw() const
 		//glCallList(displayLists[x]);
 	}
 }
-
-
+*/
+/*
 void MapAbstraction::DrawGraph(Graph *g, bool drawLevel) const
 {
 	if ((g == 0) || (g->GetNumNodes() == 0)) return;
@@ -150,7 +151,8 @@ void MapAbstraction::DrawGraph(Graph *g, bool drawLevel) const
 	glEnd();
 	//  if (verbose&kBuildGraph) printf("Done\n");
 }
-
+*/
+/*
 void MapAbstraction::DrawLevelConnections(node *n) const
 {
 	//	int x, y;
@@ -171,7 +173,7 @@ void MapAbstraction::DrawLevelConnections(node *n) const
 	}
 	//return ans;
 }
-
+*/
 void MapAbstraction::GetTileUnderLoc(int &x, int &y, const recVec &v)
 {
 	double width = (GetMap()->GetMapWidth()+1)/2.0;
@@ -183,7 +185,7 @@ void MapAbstraction::GetTileUnderLoc(int &x, int &y, const recVec &v)
 	//	printf("(%1.2f, %1.2f) in openGL converted to (%d, %d) in x/y\n",
 	//				 v.x, v.y, x, y);
 }
-
+/*
 recVec MapAbstraction::GetNodeLoc(node *n) const
 {
 	int x, y;
@@ -250,7 +252,7 @@ recVec MapAbstraction::GetNodeLoc(node *n) const
 	n->SetLabelF(kZCoordinate, ans.z);
 	return ans;
 }
-
+*/
 void MapAbstraction::ClearMarkedNodes()
 {
 	for (unsigned int x = 0; x < abstractions.size(); x++)

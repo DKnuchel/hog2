@@ -51,7 +51,7 @@ path *aStar::GetPath(GraphAbstraction *aMap, node *from, node *to, reservationPr
 
 void aStar::setCorridor(path *corridor, int width)
 {
-	eligibleNodes.resize(0);
+	//eligibleNodes.resize(0);
 	buildCorridor(corridor, width);
 }
 

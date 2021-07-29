@@ -10,14 +10,14 @@
  */
 
 #include <cstring>
-#include "Common.h"
+//#include "Common.h"
 #include "PermutationPDB.h"
 #include "LexPermutationPDB.h"
 #include "MR1PermutationPDB.h"
 #include "Driver.h"
 #include "UnitSimulation.h"
 #include "EpisodicSimulation.h"
-#include "Plot2D.h"
+//#include "Plot2D.h"
 #include "RandomUnit.h"
 #include "MNPuzzle.h"
 #include "IDAStar.h"
@@ -26,7 +26,7 @@
 #include "STPInstances.h"
 #include "TemplateAStar.h"
 #include "FocalAdd.h"
-#include "SVGUtil.h"
+//#include "SVGUtil.h"
 
 void CompareToMinCompression();
 void CompareToSmallerPDB();

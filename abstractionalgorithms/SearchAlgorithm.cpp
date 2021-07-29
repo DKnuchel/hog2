@@ -9,7 +9,7 @@
  *
  */
 
-//#ifdef OS_MAC
+//#ifdef TARGET_OS_MAC
 //#include <CoreServices/CoreServices.h>
 //#endif
 
@@ -62,7 +62,7 @@ void DoRandomPath(GraphAbstraction *aMap, SearchAlgorithm *sa, bool repeat)
 	
 	// ignoring return value! Leaking memory!
 	
-#ifdef OS_MAC
+#ifdef TARGET_OS_MAC
 	AbsoluteTime startTime = UpTime();
 #else
 	clock_t startTime, endTime;
@@ -85,7 +85,7 @@ void DoRandomPath(GraphAbstraction *aMap, SearchAlgorithm *sa, bool repeat)
 	//	//			r1 = getPathStep(r1, r2);
 	
 	
-#ifdef OS_MAC
+#ifdef TARGET_OS_MAC
 	AbsoluteTime stopTime = UpTime();
 	Nanoseconds diff = AbsoluteDeltaToNanoseconds(stopTime, startTime);
 	uint64_t nanosecs = UnsignedWideToUInt64(diff);
@@ -110,7 +110,7 @@ void DoRandomPath(GraphAbstraction *aMap, SearchAlgorithm *sa, bool repeat)
 		cnt++;
 	}
 	
-#ifdef OS_MAC
+#ifdef TARGET_OS_MAC
 	cout << "Steps: " << cnt << ", len: " << length << ", time: " << (double)nanosecs/1000000.0
 		;//<< ",  time/step: " << (double)nanosecs/(1000*cnt) << ", time/unit: " << (double)nanosecs/(1000*length);
 		cout << "ms, h() = " << aMap->h(r1, r2) << ", nodes: " << sa->GetNodesExpanded() << endl;

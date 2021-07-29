@@ -145,7 +145,7 @@ uint64_t MNAgentEnvironment::GetActionHash(tAgentAction act) const
 {
 	return act;
 }
-
+/*
 void MNAgentEnvironment::OpenGLDraw() const
 {
 }
@@ -198,8 +198,9 @@ void MNAgentEnvironment::OpenGLDraw(const MNAgentPuzzleState&s) const
 		}
 	}
 }
-
+*/
 /** Draw the transition at some percentage 0...1 between two MNAgentPuzzleStates */
+/*
 void MNAgentEnvironment::OpenGLDraw(const MNAgentPuzzleState&, const MNAgentPuzzleState&, float) const
 {
 }
@@ -207,3 +208,4 @@ void MNAgentEnvironment::OpenGLDraw(const MNAgentPuzzleState&, const MNAgentPuzz
 void MNAgentEnvironment::OpenGLDraw(const MNAgentPuzzleState&, const tAgentAction&) const
 {
 }
+*/

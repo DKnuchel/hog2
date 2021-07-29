@@ -30,7 +30,7 @@
 //#define GLdouble GLfloat
 //#else
 
-#ifdef OS_MAC
+#ifdef TARGET_OS_MAC
 #include <OpenGL/gl.h>
 #include <OpenGL/glu.h>
 #include <GLUT/glut.h>

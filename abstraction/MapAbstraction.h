@@ -11,7 +11,7 @@
 
 #include "Map.h"
 #include "GraphAbstraction.h"
-#include "GLUtil.h"
+//#include "GLUtil.h"
 #include "MapProvider.h"
 #include <stdlib.h>
 
@@ -42,17 +42,18 @@ public:
 	virtual double h(node *a, node *b);
 	
 	double OctileDistance(double,double,double,double);
-	
+	/*
 	// display functions
 	virtual void OpenGLDraw() const;
 	void ToggleDrawAbstraction(int which);
+	*/
 	void ClearMarkedNodes();
 	recVec GetNodeLoc(node *n) const;
 private:
-		
+	/*	
 	void DrawLevelConnections(node *n) const;
 	void DrawGraph(Graph *g, bool levels = true) const;
-	
+	*/
 	Map *m;
 	unsigned long levelDraw;
 };

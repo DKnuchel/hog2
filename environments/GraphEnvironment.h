@@ -15,7 +15,7 @@
 #include "UnitSimulation.h"
 #include "Graph.h"
 //#include "GraphAbstraction.h"
-#include "GLUtil.h"
+//#include "GLUtil.h"
 
 #include <iostream>
 #include <stdint.h>
@@ -310,6 +310,7 @@ public:
 	virtual uint64_t GetStateHash(const graphState &state) const;
 	virtual void GetStateFromHash(uint64_t parent, graphState &s) const;
 	virtual uint64_t GetActionHash(graphMove act) const;
+	/*
 	virtual void OpenGLDraw() const;
 	virtual void OpenGLDraw(const graphState &s) const;
 	virtual void OpenGLDraw(const graphState &s, const graphMove &gm) const;
@@ -329,7 +330,7 @@ public:
 	virtual void DrawLine(Graphics::Display &disp, const graphState &x, const graphState &y, double width = 1.0) const;
 	virtual void DrawLine(Graphics::Display &disp, float x1, float y1, float x2, float y2, double width = 1.0) const;
 	Graphics::point GetLocation(const graphState &s) const;
-	Graph *GetGraph() { return g; };
+	Graph *GetGraph() { return g; };*/
 
 	virtual void StoreGoal(graphState &) {}
 	virtual void ClearGoal() {}

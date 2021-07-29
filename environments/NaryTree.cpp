@@ -158,7 +158,7 @@ NaryState NaryTree::GetParent(NaryState s) const
 		return s;
 	return (s-1)/b;
 }
-
+/*
 void NaryTree::OpenGLDraw() const
 {
 	std::vector<NaryState> succ;
@@ -254,3 +254,4 @@ void NaryTree::DrawLine(Graphics::Display &display, const NaryState &f, const Na
 
 void NaryTree::OpenGLDraw(const NaryState&, const NaryState&, float) const { }
 void NaryTree::OpenGLDraw(const NaryState&, const NaryAction&) const { }
+*/

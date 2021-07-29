@@ -8,10 +8,10 @@
  */
 
 #include "GraphEnvironment.h"
-#include "GLUtil.h"
+//#include "GLUtil.h"
 #include "Heap.h"
 #include "FloydWarshall.h"
-#include "SVGUtil.h"
+//#include "SVGUtil.h"
 
 using namespace GraphSearchConstants;
 
@@ -202,7 +202,7 @@ uint64_t GraphEnvironment::GetActionHash(graphMove act) const
 }
 
 
-
+/*
 void GraphEnvironment::OpenGLDraw() const
 {
 	if ((g == 0) || (g->GetNumNodes() == 0)) return;
@@ -309,7 +309,8 @@ void GraphEnvironment::OpenGLDraw() const
 	}
 	
 }
-
+*/
+/*
 void GraphEnvironment::OpenGLDraw(const graphState &s) const
 {
 	if (m)
@@ -394,7 +395,8 @@ void GraphEnvironment::OpenGLDraw(const graphState &s) const
 		}
 	}
 }
-
+*/
+/*
 void GraphEnvironment::GLLabelState(const graphState &s, const char *txt) const
 {
 //	glLineWidth(3.0);
@@ -410,12 +412,14 @@ void GraphEnvironment::GLLabelState(const graphState &s, const char *txt) const
 //	glPopMatrix();
 //	glLineWidth(1.0);
 }
-
+*/
+/*
 void GraphEnvironment::OpenGLDraw(const graphState &, const graphMove &) const
 {
 	// if we want to draw a set of moves we use this to do so
 }
-
+*/
+/*
 void GraphEnvironment::GLDrawLine(const graphState &from, const graphState &to) const
 {
 	{
@@ -443,7 +447,8 @@ void GraphEnvironment::GLDrawLine(const graphState &from, const graphState &to) 
 
 	glEnd();
 }
-
+*/
+/*
 std::string GraphEnvironment::SVGHeader() const
 {
 	std::string s;
@@ -455,6 +460,8 @@ std::string GraphEnvironment::SVGHeader() const
 	s += ">\n";
 	return s;
 }
+*/
+/*
 std::string GraphEnvironment::SVGLabelState(const graphState &s, const char *str) const
 {
 	float x1, y1;
@@ -467,6 +474,8 @@ std::string GraphEnvironment::SVGLabelState(const graphState &s, const char *str
 	
 	return SVGDrawText(x1, y1, str, Colors::blue, 24);
 }
+*/
+/*
 
 std::string GraphEnvironment::SVGDraw(const graphState &s) const
 {
@@ -480,7 +489,8 @@ std::string GraphEnvironment::SVGDraw(const graphState &s) const
 
 	return SVGDrawCircle(x1, y1, 6, Colors::black)+SVGDrawCircle(x1, y1, 2, GetColor());
 }
-
+*/
+/*
 std::string GraphEnvironment::SVGDraw() const
 {
 	std::string s = "<path d=\"";
@@ -555,7 +565,8 @@ std::string GraphEnvironment::SVGDraw() const
 //	}
 	return s;
 }
-
+*/
+/*
 void GraphEnvironment::DrawLERP(Graphics::Display &disp, Graph *a, Graph *b, float mix) const
 {
 	if ((a == 0) || (a->GetNumNodes() == 0) || b == 0 || b->GetNumNodes() == 0 || b->GetNumNodes() != a->GetNumNodes())
@@ -591,7 +602,8 @@ void GraphEnvironment::DrawLERP(Graphics::Display &disp, Graph *a, Graph *b, flo
 	}
 
 }
-
+*/
+/*
 void GraphEnvironment::Draw(Graphics::Display &disp) const
 {
 	if ((g == 0) || (g->GetNumNodes() == 0)) return;
@@ -680,7 +692,8 @@ void GraphEnvironment::Draw(Graphics::Display &disp) const
 	}
 	
 }
-
+*/
+/*
 void GraphEnvironment::Draw(Graphics::Display &disp, const graphState &l) const
 {
 //	GLfloat r, gr, b, t;
@@ -734,7 +747,8 @@ void GraphEnvironment::DrawStateLabel(Graphics::Display &disp, const graphState 
 //	disp.DrawText(txt, Graphics::point(x+rad, y-rad), GetColor(), 0.05);
 	disp.DrawText(txt, Graphics::point(x+rad, y-rad), GetColor(), rad);
 }
-
+*/
+/*
 void GraphEnvironment::DrawLine(Graphics::Display &disp, const graphState &from, const graphState &to, double width) const
 {
 	float x1, y1;
@@ -753,14 +767,16 @@ void GraphEnvironment::DrawLine(Graphics::Display &disp, const graphState &from,
 	//glVertex3f(x, y, z);
 	DrawLine(disp, x1, y1, x2, y2, width);
 }
-
+*/
+/*
 void GraphEnvironment::DrawLine(Graphics::Display &disp, float x1, float y1, float x2, float y2, double width) const
 {
 	auto i = g->GetNumNodes();
 	auto rad = nodeScale*(GLdouble)0.4/(std::max(i, 8));
 	disp.DrawLine(Graphics::point(x1, y1), Graphics::point(x2, y2), 0.1f*rad*width, SearchEnvironment::color);
 }
-
+*/
+/*
 Graphics::point GraphEnvironment::GetLocation(const graphState &s) const
 {
 	float x1, y1;
@@ -771,7 +787,7 @@ Graphics::point GraphEnvironment::GetLocation(const graphState &s) const
 	Graphics::point p(x1, y1, 0);
 	return p;
 }
-
+*/
 
 namespace GraphSearchConstants {
 
@@ -1348,7 +1364,7 @@ void GraphMapInconsistentHeuristic::FillInCache(std::vector<double> &vals,
 		}
 	}	
 }
-
+/*
 void GraphMapInconsistentHeuristic::OpenGLDraw() const
 {
 	//static int counter = 50;
@@ -1410,7 +1426,8 @@ void GraphMapInconsistentHeuristic::OpenGLDraw() const
 		}
 	}
 }
-
+*/
+/*
 
 void GraphDistanceHeuristic::OpenGLDraw() const
 {
@@ -1474,7 +1491,7 @@ double GraphDistanceHeuristic::HCost(const graphState &state1, const graphState 
 	}
 	return val;
 }
-
+*/
 void GraphDistanceHeuristic::ChooseStartGoal(graphState &start, graphState &goal)
 {
 	if (heuristics.size() == 0)

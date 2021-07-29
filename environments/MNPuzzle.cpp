@@ -9,7 +9,7 @@
 
 
 #include "MNPuzzle.h"
-
+/*
 void DrawTile(float x, float y, char c1, char c2, int w, int h)
 {
 	//glLineWidth(10.0);
@@ -66,3 +66,4 @@ void DrawFrame(int w, int h)
 	glEnd();
 	glLineWidth(1.0);
 }
+*/
