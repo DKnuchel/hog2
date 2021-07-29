@@ -3,3 +3,4 @@ objs/
 html/
 objs_html/
 .DS_Store
+build/cmake/*
