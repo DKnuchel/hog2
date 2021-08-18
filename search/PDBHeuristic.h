@@ -85,6 +85,8 @@ public:
 	void BuildPDBForwardBackward(const state &goal, int numThreads);
 
 	void BuildAdditivePDB(const state &goal, int numThreads, bool useCourseOpen = true);
+	
+	void BuildDynamicallyPartitionedAdditivePDB(const state &goal, int numThreads, bool useCourseOpen = true);
 
 	void DivCompress(int factor, bool print_histogram);
 	void ModCompress(int factor, bool print_histogram);
@@ -968,6 +970,117 @@ void PDBHeuristic<abstractState, abstractAction, abstractEnvironment, state, pdb
 	}
 	PrintHistogram();
 }
+
+/**
+ https://jair.org/index.php/jair/article/view/10391/24885
+ */
+template <class abstractState, class abstractAction, class abstractEnvironment, class state, uint64_t pdbBits>
+void PDBHeuristic<abstractState, abstractAction, abstractEnvironment, state, pdbBits>::BuildDynamicallyPartitionedAdditivePDB(const state &goal, int numThreads, bool useCourseOpen)
+{
+	assert(goalSet);
+	SharedQueue<std::pair<uint64_t, uint64_t> > workQueue(numThreads*20);
+	SharedQueue<uint64_t> resultQueue;
+	std::mutex lock;
+	
+	uint64_t COUNT = GetPDBSize();
+	PDB.Resize(COUNT);
+	PDB.FillMax();
+	
+	// with weights we have to store the lowest weight stored to make sure
+	// we don't skip regions
+	std::vector<bool> coarseOpenCurr((COUNT+coarseSize-1)/coarseSize);
+	std::vector<bool> coarseOpenNext((COUNT+coarseSize-1)/coarseSize);
+	
+	uint64_t entries = goalState.size();
+	std::cout << "Num Entries: " << COUNT << std::endl;
+	std::cout << "Goal State: " << goalState[0] << std::endl;
+	//std::cout << "State Hash of Goal: " << GetStateHash(goal) << std::endl;
+	std::cout << "PDB Hash of Goal: " << GetPDBHash(goalState[0]) << std::endl;
+	
+	std::deque<state> q_curr, q_next;
+	std::vector<state> children;
+	
+	Timer t;
+	t.StartTimer();
+	for (auto &i : goalState)
+	{
+		PDB.Set(GetPDBHash(i), 0);
+		coarseOpenCurr[GetPDBHash(i)/coarseSize] = true;
+	}
+	int depth = 0;
+	uint64_t newEntries;
+	std::vector<std::thread*> threads(numThreads);
+	printf("Creating %d threads\n", numThreads);
+	do {
+		newEntries = 0;
+		Timer s;
+		s.StartTimer();
+		for (int x = 0; x < numThreads; x++)
+		{
+			threads[x] = new std::thread(&PDBHeuristic<abstractState, abstractAction, abstractEnvironment, state, pdbBits>::AdditiveForwardThreadWorker,
+										 this,
+										 x, depth, std::ref(PDB), std::ref(coarseOpenNext),
+										 &workQueue, &resultQueue, &lock);
+		}
+		
+		for (uint64_t x = 0; x < COUNT; x+=coarseSize)
+		{
+			if (!useCourseOpen || coarseOpenCurr[x/coarseSize])
+			{
+				workQueue.WaitAdd({x, std::min(COUNT, x+coarseSize)});
+			}
+			coarseOpenCurr[x/coarseSize] = false;
+		}
+		for (int x = 0; x < numThreads; x++)
+		{
+			workQueue.WaitAdd({0,0});
+		}
+		for (int x = 0; x < numThreads; x++)
+		{
+			threads[x]->join();
+			delete threads[x];
+			threads[x] = 0;
+		}
+		// read out node counts
+		uint64_t total = 0;
+		{
+			uint64_t val;
+			while (resultQueue.Remove(val))
+			{
+				total+=val;
+			}
+		}
+		
+		entries += total;//newEntries;
+		printf("Depth %d complete; %1.2fs elapsed. %llu new states written; %llu of %llu total\n",
+			   depth, s.EndTimer(), total, entries, COUNT);
+		depth++;
+		coarseOpenCurr.swap(coarseOpenNext);
+
+//		if (total == 0)
+//		{
+//			for (int x = 0; x < PDB.Size(); x++)
+//			{
+//				if (PDB.Get(x) == PDB.GetMaxValue())
+//				{
+//					abstractState s(goalState[0]);
+//					GetStateFromPDBHash(x, s, 0);
+//					std::cout << "Unassigned: [" << x << "]: " << s << "\n";
+//				}
+//			}
+//			break;
+//		}
+	} while (entries != COUNT);
+	
+	printf("%1.2fs elapsed\n", t.EndTimer());
+	if (entries != COUNT)
+	{
+		printf("Entries: %llu; count: %llu\n", entries, COUNT);
+		assert(entries == COUNT);
+	}
+	PrintHistogram();
+}
+
 
 template <class abstractState, class abstractAction, class abstractEnvironment, class state, uint64_t pdbBits>
 void PDBHeuristic<abstractState, abstractAction, abstractEnvironment, state, pdbBits>::AdditiveForwardThreadWorker(int threadNum, int depth,

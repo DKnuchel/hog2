@@ -126,9 +126,9 @@ static bool operator!=(const MNPuzzleState<width, height> &l1, const MNPuzzleSta
 }
 
 enum puzzleWeight {
-	kUnitWeight,
-	kSquared,
-	kSquareRoot,
+	kUnitWeight = 1,
+	kSquared = 2,
+	kSquareRoot = 3,
 	kSquarePlusOneRoot,
 	kUnitPlusFrac
 };
@@ -153,6 +153,7 @@ public:
 	double HCost(const MNPuzzleState<width, height> &state1, const MNPuzzleState<width, height> &state2) const;
 	double HCost(const MNPuzzleState<width, height> &state1) const;
 	double DefaultH(const MNPuzzleState<width, height> &s) const;
+	double ConflictH(const MNPuzzleState<width, height> &state1, const MNPuzzleState<width, height> &state2) const;
 
 	double GCost(const MNPuzzleState<width, height> &state1, const MNPuzzleState<width, height> &state2) const;
 	double GCost(const MNPuzzleState<width, height> &, const slideDir &) const;
@@ -241,6 +242,7 @@ public:
 	unsigned Get_Num_Of_Rows(){return height;}
 
 	void Set_Use_Manhattan_Heuristic(bool to_use){use_manhattan = to_use;}
+	void Set_Use_Linear_Conflict_Heuristic(bool to_use = true){use_conflict = to_use; use_manhattan = to_use;}
 private:
 	bool pattern[width*height];
 //	double DoPDBLookup(const MNPuzzleState<width, height> &state);
@@ -250,6 +252,7 @@ private:
 	std::vector<slideDir> ops_in_order;
 	bool goal_stored; // whether a goal is stored or not
 	bool use_manhattan;
+	bool use_conflict = false;
 	puzzleWeight weight;
 	
 	// stores the heuristic value of each tile-position pair indexed by the tile value (0th index is empty)
@@ -738,6 +741,11 @@ double MNPuzzle<width, height>::HCost(const MNPuzzleState<width, height> &state1
 				}
 			}
 		}
+		//Add bool for conflictd test
+		if (use_conflict)
+		{
+			man_dist += 2 * ConflictH(state1, state2);
+		}
 		hval = std::max(hval, man_dist);
 	}
 //	// if no heuristic
@@ -764,6 +772,61 @@ double MNPuzzle<width, height>::DefaultH(const MNPuzzleState<width, height> &sta
 			man_dist += h_increment[state.puzzle[loc]][loc];
 	}
 	return man_dist;
+}
+
+/**
+ TODO: Update description
+ Checks for Linear conflicts between two states. Used together with the Manhattan Distances, it will return an improved heuristic value. 
+ https://cse.sc.edu/~mgv/csce580sp15/gradPres/HanssonMayerYung1992.pdf
+ */
+template <int width, int height>
+double MNPuzzle<width, height>::ConflictH(const MNPuzzleState<width, height> &state1, const MNPuzzleState<width, height> &state2) const
+{
+	double conflicts = 0;
+	
+	std::array<int, width * height + 1> pRow;
+	std::array<int, width * height + 1> pCol;
+	
+	for (int r = 0; r < width; r++)
+	{
+		for (int c = 0; c < height; c++)
+		{
+			pRow[state1.puzzle[r * height + c]] = r;
+			pCol[state1.puzzle[r * height + c]] = c;
+		}
+	}
+	
+	//row conflicts
+	for (int r = 0; r < width; r++)
+	{
+		for (int cl = 0; cl < height; cl++)
+		{
+			for (int cr = cl + 1; cr < height; cr++)
+			{
+				if (state2.puzzle[r * height + cl] && state2.puzzle[r * height + cr] && r == pRow[state2.puzzle[r * height + cl]] && pRow[state2.puzzle[r * height + cl]] == pRow[state2.puzzle[r * height + cr]] && pCol[state2.puzzle[r * height + cl]] > pCol[state2.puzzle[r * height + cr]])
+				{
+					conflicts++;
+				}
+			}
+		}
+	}
+	
+	//column conflicts
+	for (int c = 0; c < width; c++)
+	{
+		for (int ru = 0; ru < height; ru++)
+		{
+			for (int rd = ru + 1; rd < height; rd++)
+			{
+				if (state2.puzzle[ru * height + c] && state2.puzzle[rd * height + c] && c == pCol[state2.puzzle[ru * height + c]] && pCol[state2.puzzle[ru * height + c]] == pCol[state2.puzzle[rd * height + c]] && pRow[state2.puzzle[ru * height + c]] > pRow[state2.puzzle[rd * height + c]])
+				{
+					conflicts++;
+				}
+			}
+		}
+	}
+	//std::cout << conflicts << std::endl;
+	return conflicts;
 }
 
 static int costs[25] =

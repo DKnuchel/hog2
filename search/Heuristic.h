@@ -35,8 +35,10 @@ public:
 	std::vector<HeuristicTreeNode> lookups;
 	std::vector<Heuristic*> heuristics;
 	mutable uint64_t histogram[256];
+	void SetDynamic (bool dynamic) {this->dynamic = dynamic;};
 private:
 	double HCost(const state &s1, const state &s2, int treeNode) const;
+	bool dynamic = false;
 };
 
 template <class state>
@@ -97,8 +99,15 @@ double Heuristic<state>::HCost(const state &s1, const state &s2, int treeNode) c
 		} break;
 		case kLeafNode:
 		{
-			hval = heuristics[lookups[treeNode].whichNode]->HCost(s1, s2);
+			if(!dynamic){
+				hval = heuristics[lookups[treeNode].whichNode]->HCost(s1, s2);
+			}
+			else
+			{
+				
+			}
 		} break;
+		
 	}
 //	histogram[int(hval)]++;
 	return hval;
