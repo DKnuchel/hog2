@@ -1,7 +1,10 @@
 cmake_minimum_required(VERSION 3.21)
 set(CMAKE_CXX_STANDARD 11)
 
+message([status] ${CMAKE_CXX_COMPILER_ID})
+
 include(cmake/ucm.cmake)
+include(3rdparty/lp.cmake)
 #include(cmake/FindSFML.cmake)
 
 project(CMakeTest VERSION 0.1)

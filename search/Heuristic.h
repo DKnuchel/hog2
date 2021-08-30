@@ -16,7 +16,8 @@
 enum HeuristicTreeNodeType {
 	kMaxNode,
 	kAddNode,
-	kLeafNode
+	kLeafNode,
+	kDynNode
 };
 
 struct HeuristicTreeNode
@@ -99,14 +100,13 @@ double Heuristic<state>::HCost(const state &s1, const state &s2, int treeNode) c
 		} break;
 		case kLeafNode:
 		{
-			if(!dynamic){
-				hval = heuristics[lookups[treeNode].whichNode]->HCost(s1, s2);
-			}
-			else
-			{
-				
-			}
+			hval = heuristics[lookups[treeNode].whichNode]->HCost(s1, s2);
+
 		} break;
+		case kDynNode:
+		{
+			hval = heuristics[lookups[treeNode].whichNode]->HCost(s1, s2);
+		}break;
 		
 	}
 //	histogram[int(hval)]++;
