@@ -2,9 +2,6 @@ bin/
 objs/
 html/
 objs_html/
-.DS_Store
-build/cmake/*
-build/cmake-XCode/*
 
 
 # Created by https://www.toptal.com/developers/gitignore/api/xcode,cmake,c++,visualstudio,macos,windows,linux
