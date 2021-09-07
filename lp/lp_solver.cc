@@ -2,10 +2,10 @@
 
 #include "lp_internals.h"
 
-#include "../3rdparty/option_parser.h"
+//#include "../3rdparty/option_parser.h"
 
 #include "../3rdparty/utils/logging.h"
-#include "../utils/3rdparty/system.h"
+#include "../3rdparty/utils/system.h"
 
 #ifdef USE_LP
 #ifdef __GNUG__
@@ -28,6 +28,7 @@ using namespace std;
 using utils::ExitCode;
 
 namespace lp {
+    /*
 void add_lp_solver_option_to_parser(OptionParser &parser) {
     parser.document_note(
         "Note",
@@ -50,7 +51,7 @@ void add_lp_solver_option_to_parser(OptionParser &parser) {
         "CPLEX",
         lp_solvers_doc);
 }
-
+*/
 LPConstraint::LPConstraint(double lower_bound, double upper_bound)
     : lower_bound(lower_bound),
       upper_bound(upper_bound) {

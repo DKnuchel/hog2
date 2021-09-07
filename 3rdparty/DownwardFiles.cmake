@@ -103,34 +103,32 @@ fast_downward_plugin(
     CORE_PLUGIN
 )
 
-fast_downward_plugin(
-    NAME OPTIONPARSER 
-    HELP "Just to include the option_parser.h file"
-    SOURCES
-        3rdparty/option_parser
-    CORE_PLUGIN
-)
+#fast_downward_plugin(
+#    NAME OPTIONPARSER
+#    HELP "Just to include the option_parser.h file"
+#    SOURCES
+#        3rdparty/option_parser
+#    CORE_PLUGIN
+#)
 
 fast_downward_plugin(
     NAME UTILS
     HELP "System utilities"
     SOURCES
-        utils/collections
-        utils/countdown_timer
-        utils/exceptions
-        utils/hash
-        utils/language
-        utils/logging
-        utils/markup
-        utils/math
-        utils/memory
-        utils/rng
-        utils/rng_options
-        utils/strings
-        utils/system
-        utils/system_unix
-        utils/system_windows
-        utils/timer
+        3rdparty/utils/collections
+        3rdparty/utils/countdown_timer
+        3rdparty/utils/exceptions
+        3rdparty/utils/hash
+        3rdparty/utils/language
+        3rdparty/utils/logging
+        3rdparty/utils/markup
+        3rdparty/utils/math
+        3rdparty/utils/memory
+        3rdparty/utils/strings
+        3rdparty/utils/system
+        3rdparty/utils/system_unix
+        3rdparty/utils/system_windows
+        3rdparty/utils/timer
     CORE_PLUGIN
 )
 

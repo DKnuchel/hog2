@@ -16,16 +16,14 @@ class DynPermutationPDB
 {
 public:
 	DynPermutationPDB(environment &e);
-	std::vector<LexPermutationPDB<state, action, environment>> GetPairs(std::string path);
-	std::vector<LexPermutationPDB<state, action, environment>> GetTriplets(std::string path);
+	std::vector<LexPermutationPDB<state, action, environment>> GetPDBs(std::string path);
 	void SetGoal(state *s){goal = s;};
 private:
 	environment env;
 	state *goal;
 	void BuildPairsPDBs(std::string path);
 	void BuildTripletsPDBs(std::string path);
-	std::vector<LexPermutationPDB<state, action, environment> > pairs;
-	std::vector<LexPermutationPDB<state, action, environment> > triplets;
+	std::vector<LexPermutationPDB<state, action, environment> > pdbs;
 	std::vector<std::vector<int>> patterns;
 	int threads = std::thread::hardware_concurrency();
 };
@@ -52,7 +50,7 @@ void DynPermutationPDB<width, height, state, action, environment>::BuildPairsPDB
 				pdb.BuildAdditivePDB(*goal, threads);
 				pdb.Save(path.c_str());
 			}
-			pairs.push_back(pdb);
+			pdbs.push_back(pdb);
 		}
 	}
 }
@@ -75,24 +73,19 @@ void DynPermutationPDB<width, height, state, action, environment>::BuildTriplets
 					pdb.BuildAdditivePDB(*goal, threads);
 					pdb.Save(path.c_str());
 				}
-				triplets.push_back(pdb);
+				pdbs.push_back(pdb);
 			}
 		}
 	}
 }
 
 template<int width, int height, class state, class action, class environment>
-std::vector<LexPermutationPDB<state, action, environment>> DynPermutationPDB<width, height, state, action, environment>::GetPairs(std::string path)
+std::vector<LexPermutationPDB<state, action, environment>> DynPermutationPDB<width, height, state, action, environment>::GetPDBs(std::string path)
 {
 	BuildPairsPDBs(path);
-	return pairs;
+    BuildTripletsPDBs(path);
+	return pdbs;
 }
 
-template<int width, int height, class state, class action, class environment>
-std::vector<LexPermutationPDB<state, action, environment>> DynPermutationPDB<width, height, state, action, environment>::GetTriplets(std::string path)
-{
-	BuildTripletsPDBs(path);
-	return triplets;
-}
 
 #endif /* DynPermutationPDB_h */

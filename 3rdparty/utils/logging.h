@@ -8,10 +8,6 @@
 #include <string>
 #include <vector>
 
-namespace options {
-class OptionParser;
-}
-
 namespace utils {
 /*
   Simple logger that prepends time and peak memory info to messages.
@@ -57,8 +53,6 @@ enum class Verbosity {
     VERBOSE,
     DEBUG
 };
-
-extern void add_verbosity_option_to_parser(options::OptionParser &parser);
 
 class TraceBlock {
     std::string block_name;

@@ -14,6 +14,7 @@
   if the planner is compiled with USE_LP. Otherwise, they just print
   an error message and abort.
 */
+#define USE_LP true
 #ifdef USE_LP
 #define LP_METHOD(X) X;
 #else

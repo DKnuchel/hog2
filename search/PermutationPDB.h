@@ -38,7 +38,11 @@ private:
 
 protected:
 	std::vector<int> distinct;
-	size_t puzzleSize;
+public:
+    const std::vector<int> &GetDistinct() const;
+
+protected:
+    size_t puzzleSize;
 	uint64_t pdbSize;
 	state example;
 };
@@ -163,6 +167,11 @@ uint64_t PermutationPDB<state, action, environment, bits>::FactorialUpperK(int n
 	}
 	
 	return value;
+}
+
+template<class state, class action, class environment, int bits>
+const std::vector<int> &PermutationPDB<state, action, environment, bits>::GetDistinct() const {
+    return distinct;
 }
 
 #endif
