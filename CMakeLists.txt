@@ -7,8 +7,10 @@ include(cmake/ucm.cmake)
 include(3rdparty/lp.cmake)
 #include(cmake/FindSFML.cmake)
 
-project(CMakeTest VERSION 0.1)
-
+project(Hog2 VERSION 1.0)
+SET(TMP_SIZE "5" CACHE STRING "Size")
+message("TMP_SIZE: ${TMP_SIZE}")
+add_definitions(-DPUZZLE_SIZE=${TMP_SIZE})
 #include_directories(${CMAKE_SOURCE_DIR}/my_lib)
 
 #set(SFML_STATIC_LIBRARIES TRUE)
@@ -27,10 +29,10 @@ target_include_directories(HogCore PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/absmapalgo
 
 ucm_add_dirs(apps/test TO HOG_MAIN RECURSIVE)
 
-add_executable(CMakeTest ${HOG_MAIN})
+add_executable(Hog2 ${HOG_MAIN})
 
 find_package(Threads REQUIRED)
 
-target_link_libraries(CMakeTest HogCore Threads::Threads downward)
+target_link_libraries(Hog2 HogCore Threads::Threads downward)
 
 # learning maps shared

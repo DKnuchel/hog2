@@ -2,6 +2,7 @@ bin/
 objs/
 html/
 objs_html/
+RandomDirectoryName/
 
 
 # Created by https://www.toptal.com/developers/gitignore/api/xcode,cmake,c++,visualstudio,macos,windows,linux

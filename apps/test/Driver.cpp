@@ -1,343 +1,407 @@
 #include "Driver.h"
 #include "MNPuzzle.h"
 #include "IDAStar.h"
-#include "AStar.h"
 #include "PermutationPDB.h"
 #include "LexPermutationPDB.h"
-#include "MR1PermutationPDB.h"
 #include "DynPermutationPDB.h"
-#include "STPInstances.h"
 #include "Timer.h"
 #include "DynamicPDBSearch.h"
 #include "Graph.h"
-
+#include <iostream>
+#include <fstream>
 
 #include "PhOHeuristic.h"
-#include "../3rdparty/lp/lp_solver.h"
 
-void ManhattanDistance(int iterationSteps, bool korfInstance = false);
-void LinearConflict(int IterationSteps, bool korfInstance = false);
-void SolveKorfAdditive(std::string path, int iterationSteps);
-void Dynamic();
-void PhO();
-void LPTest();
+#ifdef PUZZLE_SIZE
+#if PUZZLE_SIZE == 4
+#define SIZE 4
+#elif PUZZLE_SIZE == 5
+#define SIZE 5
+#endif
+#endif
+//#define PUZZLE_SIZE @PUZZLE_SIZE@
+const int width = SIZE, height = SIZE;
 
-const int width = 4, height = 4;
+enum MODE {
+    MD,
+    LC,
+    PDB,
+    GENERATE
+};
+enum PDBMODE {
+    STATIC,
+    DYNAMIC,
+    PHO
+};
+enum PHOMODE {
+    PRIME,
+    DUAL
+};
+typedef struct options {
+    std::string puzzlePath;
+    MODE mode;
+    PDBMODE pdbMode;
+    PHOMODE phoMode = PHOMODE::PRIME;
+    std::vector<std::vector<int>> patterns;
+    std::string pdbPath;
+    int patternMaxOrder;
+    bool isInteger = false;
 
-int main()
-{
-    //LPTest();
-    std::cout << "PhO: " << std::endl;
-	PhO();
-	//Dynamic();
-    std::cout << "Linear Conflict: " << std::endl;
-    LinearConflict(1, true);
-	//ManhattanDistance(1, true);
-	//SolveKorfAdditive("./", 1);
-}
-//
+    bool puzzlePathSet = false;
+    bool patternsSet = false;
+    bool patternMaxOrderSet = false;
+    bool modeSet = false;
+    bool pdbModeSet = false;
+    bool pdbPathSet = false;
 
-void LPTest()
-{
-    lp::LPSolver *lps = new lp::LPSolver(lp::LPSolverType::CPLEX);
-    named_vector::NamedVector<lp::LPVariable> vars;
-    vars.emplace_back(-lps->get_infinity(), lps->get_infinity(), 0);
-    vars.emplace_back(-lps->get_infinity(), lps->get_infinity(), 0);
-    vars.emplace_back(3, lps->get_infinity(), 0);
+    bool checkOptions() const {
+        if (!puzzlePathSet & (mode != MODE::GENERATE)) {
+            std::cerr << "Missing puzzle!" << std::endl;
+            return false;
+        }
+        if (!modeSet) {
+            std::cerr << "Missing algorithm!" << std::endl;
+            return false;
+        }
+        if ((mode == MODE::PDB) & !pdbModeSet) {
+            std::cerr << "Missing pdbMode!" << std::endl;
+            return false;
+        }
+        if ((mode == MODE::PDB) & !patternsSet & !patternMaxOrderSet) {
+            std::cerr << "Missing pattern or max order!" << std::endl;
+            return false;
+        }
+        if ((mode == MODE::PDB) & !pdbPathSet) {
+            std::cerr << "Missing pdb path!" << std::endl;
+        }
+        if (((mode == MODE::LC) || (mode == MODE::MD)) & (patternMaxOrderSet || patternsSet)) {
+            std::cerr << "Ignoring patters" << std::endl;
+            return false;
+        }
+        if ((mode == MODE::GENERATE) & (!puzzlePathSet || !pdbPathSet)) {
+            std::cerr << "Missing paths" << std::endl;
+        }
+        if (pdbModeSet & (pdbMode == PDBMODE::STATIC) & !patternsSet) {
+            std::cerr << "Missing Pattern!";
+        }
+        if (patternMaxOrderSet & (patternMaxOrder < 2)) {
+            std::cerr << "Order must be at least 2" << std::endl;
+            return false;
+        }
+        return true;
+    };
+} options;
 
-    named_vector::NamedVector<lp::LPConstraint> constraints;
-    lp::LPConstraint constraint1(32, lps->get_infinity());
-    lp::LPConstraint constraint2(-4.32, lps->get_infinity());
-    constraint1.insert(0, 1);
-    constraint1.insert(1, 1);
-    constraint2.insert(1, 1);
-    constraint2.insert(2, 1);
+void BasicHeuristics();
 
-    constraints.emplace_back(std::move(constraint1));
-    constraints.emplace_back(std::move(constraint2));
+void StaticPDB();
 
-    lp::LinearProgram lp(lp::LPObjectiveSense::MINIMIZE, std::move(vars), std::move(constraints));
-    lps->load_problem(lp);
-    lps->solve();
-    std::vector<double> solutions = lps->extract_solution();
-    for(auto i: solutions)
-    {
-        std::cout << i << " ";
-        std::cout << std::endl;
+void PhO(bool dual, bool is_integer);
+
+void Generate();
+
+std::vector<std::vector<int>> extractPattern(std::string str);
+
+std::vector<std::string> splitter(std::string str, std::string del);
+
+options opt;
+
+options getOptions(int argc, const char *const *argv);
+
+int main(int argc, const char *argv[]) {
+    //std::cout << "PUZZLE_SIZE: " << PUZZLE_SIZE << " Size: " << SIZE << std::endl;
+    opt = getOptions(argc, argv);
+    switch (opt.mode) {
+        case MD:
+            BasicHeuristics();
+        case LC:
+            BasicHeuristics();
+        case PDB:
+            switch (opt.pdbMode) {
+                case STATIC:
+                    StaticPDB();
+                case DYNAMIC:
+                    PhO(true, true);
+                case PHO:
+                    switch (opt.phoMode) {
+                        case PRIME:
+                            PhO(false, opt.isInteger);
+                        case DUAL:
+                            PhO(true, opt.isInteger);
+                    }
+            }
+        case GENERATE:
+            Generate();
     }
 }
 
-void ManhattanDistance(int iterationSteps, bool korfInstance){
-	printf("Heuristic: Manhattan Distance\n");
-	MNPuzzle<width, height> mnp;
-	MNPuzzleState<width, height> start, goal;
-	std::vector<slideDir> path;
-	mnp.Set_Use_Manhattan_Heuristic(true);
-	Timer t;
-	
-	if (korfInstance)
-	{
-		t.StartTimer();
-		for (int i = 0; i < iterationSteps; i++) {
-			start = STP::GetKorfInstance(i);
-			IDAStar<MNPuzzleState<width, height>, slideDir> ida;
-			ida.GetPath(&mnp, start, goal, path);
-			printf("ida\t%1.2f\t%llu\t%llu\t%1.2fs elapsed\n", mnp.GetPathLength(start, path), ida.GetNodesExpanded(), ida.GetNodesTouched(), t.EndTimer());
-			
-		}
-		return;
-	}
-	
-	for (int i = 0; i < iterationSteps; i++)
-	{
-		t.StartTimer();
-		start = mnp.Generate_Random_Puzzle();
-		goal.Reset();
-		IDAStar<MNPuzzleState<width, height>, slideDir> ida;
-		ida.GetPath(&mnp, start, goal, path);
-		printf("ida\t%1.2f\t%llu\t%llu\t%1.2fs elapsed\n", mnp.GetPathLength(start, path), ida.GetNodesExpanded(), ida.GetNodesTouched(), t.EndTimer());	}
-	return;
-}
+options getOptions(int argc, const char *const *argv) {
+    options _opt;
 
-void LinearConflict(int iterationSteps, bool korfInstance)
-{
-	printf("Heuristic: Linear Conflict\n");
-	MNPuzzle<width, height> mnp;
-	MNPuzzleState<width, height> start, goal;
-	std::vector<slideDir> path;
-	mnp.Set_Use_Linear_Conflict_Heuristic(true);
-	Timer t;
-    /*
-	if (korfInstance)
-	{
-		for (int i = 0; i < iterationSteps; i++) {
-			t.StartTimer();
-			start = STP::GetKorfInstance(i);
-			IDAStar<MNPuzzleState<width, height>, slideDir> ida;
-			ida.GetPath(&mnp, start, goal, path);
-			printf("ida\t%1.2f\t%llu\t%llu\t%1.2fs elapsed\n", mnp.GetPathLength(start, path), ida.GetNodesExpanded(), ida.GetNodesTouched(), t.EndTimer());
-		}
-		return;
-	}
-
-*/
-	//for (int i = 0; i < iterationSteps; i++)
-	{
-		t.StartTimer();
-		start = STP::GetKorfInstance(1);
-		goal.Reset();
-		IDAStar<MNPuzzleState<width, height>, slideDir> ida;
-		ida.GetPath(&mnp, start, goal, path);
-		printf("ida\t%1.2f\t%llu\t%llu\t%1.2fs elapsed\n", mnp.GetPathLength(start, path), ida.GetNodesExpanded(), ida.GetNodesTouched(), t.EndTimer());
+    for (int i = 0; i < argc; ++i) {
+        if ((std::string) argv[i] == "-i") {
+            _opt.puzzlePath = (std::string) argv[++i];
+            _opt.puzzlePathSet = true;
+        } else if ((std::string) argv[i] == "-p") {
+            if (((std::string) argv[++i]).size() > 4) {
+                _opt.patterns = extractPattern((std::string) argv[i]);
+                _opt.patternsSet = true;
+            } else {
+                _opt.patternMaxOrder = std::stoi(argv[i]);
+                _opt.patternMaxOrderSet = true;
+            }
+        } else if ((std::string) argv[i] == "-m") {
+            if ((std::string) argv[++i] == "MD") {
+                _opt.mode = MD;
+                _opt.modeSet = true;
+            } else if ((std::string) argv[i] == "LC") {
+                _opt.mode = LC;
+                _opt.modeSet = true;
+            } else if ((std::string) argv[i] == "PDB") {
+                _opt.mode = PDB;
+                _opt.modeSet = true;
+            } else if ((std::string) argv[i] == "GENERATE") {
+                _opt.mode = GENERATE;
+                _opt.modeSet = true;
+            }
+        } else if ((std::string) argv[i] == "--static") {
+            _opt.pdbMode = STATIC;
+            _opt.pdbModeSet = true;
+        } else if ((std::string) argv[i] == "--dynamic") {
+            _opt.pdbMode = DYNAMIC;
+            _opt.pdbModeSet = true;
+        } else if ((std::string) argv[i] == "--pho") {
+            _opt.pdbMode = PHO;
+            _opt.pdbModeSet = true;
+        } else if ((std::string) argv[i] == "--dual") {
+            _opt.phoMode = DUAL;
+        } else if ((std::string) argv[i] == "--integer") {
+            _opt.isInteger = true;
+        } else if ((std::string) argv[i] == "-d") {
+            _opt.pdbPath = (std::string) argv[++i];
+            _opt.pdbPathSet = true;
+        }
     }
-	return;
+    if (!_opt.checkOptions())
+        std::abort();
+    return _opt;
 }
 
-void SolveKorfAdditive(std::string path, int iterationSteps)
-{
-	MNPuzzle<4, 4> mnp;
-	Heuristic<MNPuzzleState<4, 4>> h;
-	MNPuzzleState<4, 4> start, goal;
-	std::vector<slideDir> moves;
-	std::vector<MNPuzzleState<4, 4>> statepath;
-	goal.Reset();
-	mnp.StoreGoal(goal);
-		
-	std::vector<int> p1 = {0, 1, 2, 3, 4, 5, 6, 7};
-	std::vector<int> p2 = {0, 8, 9, 10, 11, 12, 13, 14, 15};
-	int threads = std::thread::hardware_concurrency();
-	static LexPermutationPDB<MNPuzzleState<width, height>, slideDir, MNPuzzle<width, height>> pdb1(&mnp, goal, p1);
-	static LexPermutationPDB<MNPuzzleState<width, height>, slideDir, MNPuzzle<width, height>> pdb2(&mnp, goal, p2);
-	
-	if (pdb1.Load(path.c_str()))
-	{
-		printf("Loaded successfully\n");
-	}
-	else {
-		mnp.SetPattern(p1);
-		pdb1.BuildAdditivePDB(goal, threads);
-		pdb1.Save(path.c_str());
-	}
-	if (pdb2.Load(path.c_str()))
-	{
-		printf("Loaded successfully\n");
-	}
-	else {
-		mnp.SetPattern(p2);
-		pdb2.BuildAdditivePDB(goal, threads);
-		pdb2.Save(path.c_str());
-	}
-	
-	h.lookups.resize(0);
-	h.lookups.push_back({kAddNode, 1, 2});
-	h.lookups.push_back({kLeafNode, 0, 0});
-	h.lookups.push_back({kLeafNode, 1, 1});
-			
-	h.heuristics.resize(0);
-	h.heuristics.push_back(&pdb1);
-	h.heuristics.push_back(&pdb2);
-	
-	//std::cout << "H-Size: " << h.heuristics.size() << std::endl;
-	//std::cout << "Heuristic front:" << h.heuristics.front()->HCost(start, goal) << std::endl;
 
-	{
-		IDAStar<MNPuzzleState<4, 4>, slideDir> ida;
-		ida.SetHeuristic(&h);
-		std::vector<slideDir> path;
-		for (int x = 0; x < iterationSteps; x++)
-		{
-			start = STP::GetKorfInstance(x);
-			ida.GetPath(&mnp, start, goal, path);
-			printf("ida\t%1.2f\t%llu\t%llu\n", mnp.GetPathLength(start, path), ida.GetNodesExpanded(), ida.GetNodesTouched());
-		}
-	}
-}
-/*
-void Dynamic()
-{
-	MNPuzzle<width, height> mnp;
-	Heuristic<MNPuzzleState<width, height>> hPairs;
-	Heuristic<MNPuzzleState<width, height>> hTriplets;
-	MNPuzzleState<width,height> start, goal;
-	std::vector<slideDir> moves;
-	std::vector<MNPuzzleState<width, height>> statepath;
-	goal.Reset();
-	mnp.StoreGoal(goal);
-
-	
-	DynPermutationPDB<width, height, MNPuzzleState<width, height>, slideDir, MNPuzzle<width, height>> pdb(mnp);
-	pdb.SetGoal(&goal);
-		
-	std::vector<LexPermutationPDB<MNPuzzleState<width, height>, slideDir, MNPuzzle<width, height>> > pdbs = pdb.GetPairs(std::string("./pairs/"));
-	std::vector<LexPermutationPDB<MNPuzzleState<width, height>, slideDir, MNPuzzle<width, height>> > pdbs2 = pdb.GetTriplets(std::string("./triplets/"));
-
-	hPairs.lookups.resize(0);
-	hPairs.lookups.push_back({kMaxNode, 1, 2});
-	hPairs.lookups.push_back({kLeafNode, 0, 0});
-	hPairs.lookups.push_back({kLeafNode, 1, 1});
-	
-	hTriplets.lookups.resize(0);
-	hTriplets.lookups.push_back({kMaxNode, 1, 2});
-	hTriplets.lookups.push_back({kLeafNode, 0, 0});
-	hTriplets.lookups.push_back({kLeafNode, 1, 1});
-	
-	hPairs.heuristics.resize(0);
-	for(auto& i : pdbs)
-	{
-		hPairs.heuristics.push_back(&i);
-	}
-	for(auto& i: pdbs2)
-	{
-		hTriplets.heuristics.push_back(&i);
-	}
-		
-	//Testing:
-	start = STP::GetKorfInstance(1);
-	goal = STP::GetKorfInstance(0);
-	
-	DynamicPDBSearch<width, height, MNPuzzleState<width, height>, slideDir, MNPuzzle<width, height>> dyn(&hPairs, &hTriplets);
-	double** graph = dyn.CreateAdjacencyMatrix(start, goal); //Only for comparison with the graph
-	Graph g = dyn.CreateGraph(start, goal);
-		
-	*/
-//	for(int i = 0; i < g.GetNumNodes(); i++)
-//	{
-//	std::cout << g.GetNode(i)->GetNumEdges() << " " << g.GetNode(i)->getNumIncomingEdges() << " " << g.GetNode(i)->getNumOutgoingEdges() << std::endl;
-//	}
-//
-//	for(int i = 0; i < width*height; i++)
-//	{
-//		for(int j = i; j < g.GetNode(i)->GetNumEdges(); j++)
-//		{
-//			bool b = (g.GetNode(i)->getEdge(j)->GetWeight() == graph[i][j]);
-//			std::cout << b << ": " << i << "-" << j << ": " << g.GetNode(i)->getEdge(j)->getFrom() << "-" << g.GetNode(i)->getEdge(j)->getTo() << " " <<g.GetNode(i)->getEdge(j)->GetWeight() << " " << graph[i][j] << std::endl;
-//		}
-//	}
-/*
-	std::cout << g.GetNode(1)->getEdge(0)->getFrom() << "-" << g.GetNode(1)->getEdge(0)->getTo() << std::endl; //verschiebung um 1 bei j = i-1
-	std::cout << g.GetNode(1)->getEdge(1)->GetWeight() << "-" << g.GetNode(1)->getEdge(1)->getTo() << std::endl;
-	
-	
-	
-	std::cout << "Matrix: " << std::endl;
-	for(int i = 0; i < width*height; i++)
-	{
-		for(int j = 0; j < width*height; j++){
-			std::cout << " " << graph[i][j] << "\t";
-		}
-		std::cout << std::endl;
-	}
-
-	
-	Heuristic<MNPuzzleState<width, height>> h;
-	h.lookups.resize(0);
-	h.lookups.push_back({kDynNode, 0, 0});
-	h.heuristics.resize(0);
-	h.heuristics.push_back(&dyn);
-	
-	{
-		IDAStar<MNPuzzleState<4, 4>, slideDir> ida;
-		ida.SetHeuristic(&h);
-		std::vector<slideDir> path;
-		start = STP::GetKorfInstance(1);
-		ida.GetPath(&mnp, start, goal, path);
-		printf("ida\t%1.2f\t%llu\t%llu\n", mnp.GetPathLength(start, path), ida.GetNodesExpanded(), ida.GetNodesTouched());
-	}
-	
-}
-*/
-void PhO()
-{
-	MNPuzzle<width, height> mnp;
-	Heuristic<MNPuzzleState<width, height>> h1;
-	MNPuzzleState<width,height> start, goal;
-	std::vector<slideDir> moves;
-	std::vector<MNPuzzleState<width, height>> statepath;
-	goal.Reset();
-	mnp.StoreGoal(goal);
-
-	
-	DynPermutationPDB<width, height, MNPuzzleState<width, height>, slideDir, MNPuzzle<width, height>> pdb(mnp);
-	pdb.SetGoal(&goal);
-		
-	std::vector<LexPermutationPDB<MNPuzzleState<width, height>, slideDir, MNPuzzle<width, height>> > pdbs = pdb.GetPDBs(std::string("./pdbs/"));
-
-	h1.lookups.resize(0);
-	h1.lookups.push_back({kMaxNode, 1, 2});
-	h1.lookups.push_back({kLeafNode, 0, 0});
-	h1.lookups.push_back({kLeafNode, 1, 1});
-	
-	h1.heuristics.resize(0);
-	for(auto& i : pdbs)
-	{
-		h1.heuristics.push_back(&i);
-	}
-		
-	//Testing:
-	start = STP::GetKorfInstance(1);
-	PhOHeuristic<width, height, MNPuzzleState<width, height>, slideDir, MNPuzzle<width, height>> pho(&h1, goal);
-
-	Heuristic<MNPuzzleState<width, height>> h2;
-	h2.lookups.resize(0);
-	h2.lookups.push_back({kDynNode, 0, 0});
-	h2.heuristics.resize(0);
-	h2.heuristics.push_back(&pho);
-
-    IDAStar<MNPuzzleState<4, 4>, slideDir> ida;
-    ida.SetHeuristic(&h2);
+void BasicHeuristics() {
+    MNPuzzle<width, height> mnp;
+    MNPuzzleState<width, height> start, goal;
     std::vector<slideDir> path;
-    start = STP::GetKorfInstance(1);
-    ida.GetPath(&mnp, start, goal, path);
-    printf("ida\t%1.2f\t%llu\t%llu\n", mnp.GetPathLength(start, path), ida.GetNodesExpanded(), ida.GetNodesTouched());
+    mnp.Set_Use_Manhattan_Heuristic((opt.mode == MODE::MD));
+    mnp.Set_Use_Linear_Conflict_Heuristic((opt.mode == MODE::LC));
+    Timer t;
+    {
+        t.StartTimer();
+        std::vector<MNPuzzleState<width, height>> _vec;
+        MNPuzzle<width, height>::read_in_mn_puzzles(opt.puzzlePath.c_str(), false, 1, _vec);
+        start = _vec[0];
+        goal.Reset();
+        IDAStar<MNPuzzleState<width, height>, slideDir> ida;
+        ida.GetPath(&mnp, start, goal, path);
+        printf("ida\t%1.2f\t%lu\t%lu\t%1.2fs elapsed\n", mnp.GetPathLength(start, path), ida.GetNodesExpanded(),
+               ida.GetNodesTouched(), t.EndTimer());
+    }
+}
+
+void StaticPDB() {
+    MNPuzzle<width, height> mnp;
+    Heuristic<MNPuzzleState<width, height>> h;
+    MNPuzzleState<width, height> start, goal;
+    std::vector<slideDir> moves;
+    std::vector<MNPuzzleState<width, height>> statePath;
+    goal.Reset();
+    mnp.StoreGoal(goal);
+    unsigned int threads = std::thread::hardware_concurrency();
+    std::vector<LexPermutationPDB<MNPuzzleState<width, height>, slideDir, MNPuzzle<width, height>>> pdbs;
+    for (auto &p: opt.patterns) {
+        LexPermutationPDB<MNPuzzleState<width, height>, slideDir, MNPuzzle<width, height>> pdb(&mnp, goal, p);
+        pdbs.push_back(pdb);
+    }
+
+    h.lookups.resize(0);
+    h.lookups.push_back({kAddNode, 1, 2});
+    h.lookups.push_back({kLeafNode, 0, 0});
+    h.lookups.push_back({kLeafNode, 1, 1});
+
+    h.heuristics.resize(0);
+    for (auto &pdb: pdbs) {
+        if (!pdb.Load(opt.pdbPath.c_str())) {
+            mnp.SetPattern(pdb.GetDistinct());
+            pdb.BuildAdditivePDB(goal, threads);
+            pdb.Save(opt.pdbPath.c_str());
+        }
+        h.heuristics.push_back(&pdb);
+    }
+
+    Timer t;
+    {
+        t.StartTimer();
+        std::vector<MNPuzzleState<width, height>> _vec;
+        MNPuzzle<width, height>::read_in_mn_puzzles(opt.puzzlePath.c_str(), false, 1, _vec);
+        start = _vec[0];
+        IDAStar<MNPuzzleState<width, height>, slideDir> ida;
+        ida.SetHeuristic(&h);
+        std::vector<slideDir> path;
+        ida.GetPath(&mnp, start, goal, path);
+        printf("ida\t%1.2f\t%lu\t%lu\t%1.2fs elapsed\n", mnp.GetPathLength(start, path), ida.GetNodesExpanded(),
+               ida.GetNodesTouched(), t.EndTimer());
+    }
+}
+
+void PhO(bool dual, bool is_integer) {
+    MNPuzzle<width, height> mnp;
+    Heuristic<MNPuzzleState<width, height>> h1;
+    MNPuzzleState<width, height> start, goal;
+    std::vector<slideDir> moves;
+    std::vector<MNPuzzleState<width, height>> statePath;
+    goal.Reset();
+    mnp.StoreGoal(goal);
+
+
+    DynPermutationPDB<width, height, MNPuzzleState<width, height>, slideDir, MNPuzzle<width, height>> pdb(&mnp,
+                                                                                                          opt.patternMaxOrder);
+    pdb.SetGoal(&goal);
+
+    std::vector<LexPermutationPDB<MNPuzzleState<width, height>, slideDir, MNPuzzle<width, height>>> pdbs = pdb.GetPDBs(
+            std::string(opt.pdbPath));
+
+    h1.lookups.resize(0);
+    h1.lookups.push_back({kMaxNode, 1, 2});
+    h1.lookups.push_back({kLeafNode, 0, 0});
+    h1.lookups.push_back({kLeafNode, 1, 1});
+
+    h1.heuristics.resize(0);
+    for (auto &i: pdbs) {
+        h1.heuristics.push_back(&i);
+    }
+
+    PhOHeuristic<width, height, MNPuzzleState<width, height>, slideDir, MNPuzzle<width, height>> pho(&h1, goal, dual,
+                                                                                                     is_integer);
+    pho.SetSortedPatterns();
+
+    Heuristic<MNPuzzleState<width, height>> h2;
+    h2.lookups.resize(0);
+    h2.lookups.push_back({kDynNode, 0, 0});
+    h2.heuristics.resize(0);
+    h2.heuristics.push_back(&pho);
+
+    Timer t;
+    {
+        t.StartTimer();
+        IDAStar<MNPuzzleState<width, height>, slideDir> ida;
+        ida.SetHeuristic(&h2);
+        std::vector<slideDir> path;
+        std::vector<MNPuzzleState<width, height>> _vec;
+        if (MNPuzzle<width, height>::read_in_mn_puzzles(opt.puzzlePath.c_str(), false, 1, _vec) == 1)
+            std::cerr << "Failed to read puzzle!" << std::endl;
+        for (int i = 0; i < _vec[0].puzzle.size(); ++i) {
+            start.puzzle[i] = _vec[0].puzzle[i];
+        }
+        ida.GetPath(&mnp, start, goal, path);
+        printf("ida\t%1.2f\t%lu\t%lu\t%1.2fs elapsed\n", mnp.GetPathLength(start, path), ida.GetNodesExpanded(),
+               ida.GetNodesTouched(), t.EndTimer());
+    }
 }
 
 
+std::vector<std::vector<int>> extractPattern(std::string str) {
+    std::vector<std::string> strPattern = splitter(str, ")(");
+    std::vector<std::vector<int>> pattern;
+    for (auto &s: strPattern) {
+        s.erase(std::remove(s.begin(), s.end(), '('), s.end());
+        s.erase(std::remove(s.begin(), s.end(), ')'), s.end());
+        std::vector<int> vec = {0};
+        for (auto &p: splitter(s, ",")) {
+            vec.push_back(std::stoi(p));
+        }
+        pattern.push_back(vec);
+    }
+    return pattern;
+}
 
-/*
- Linear Conflict:
- +	Added in MNPuzzle.h before call for DefaultH(const state)
+std::vector<std::string> splitter(std::string str, std::string del) {
+    int start = 0;
+    int end = str.find(del);
+    std::vector<std::string> ret;
+    while (end != -1) {
+        ret.push_back(str.substr(start, end - start));
+        start = end + del.size();
+        end = str.find(del, start);
+    }
+    ret.push_back(str.substr(start, end - start));
+    return ret;
+}
 
- 
- DPA-PDB:
- -	If hashing and reading of the data can be ignored (same as of now) than we only need to check how to generate the patterns. (each pattern gets its own pdb, which then will be pushed into the heuristic and afterwards passed on to IDA*
- */
+void Generate() {
+    opt.patternMaxOrder = 4;
+    MNPuzzle<width, height> mnp;
+    MNPuzzleState<width, height> start, goal;
+
+    //Generate 1000 puzzles
+    std::vector<std::vector<int>> puzzles;
+    for (int i = 0; i < 1000; ++i) {
+        start = mnp.Generate_Random_Puzzle();
+        std::vector<int> puzzle;
+        puzzle.insert(puzzle.begin(), std::begin(start.puzzle), std::end(start.puzzle));
+        puzzles.push_back(puzzle);
+    }
+
+    //Remove duplicate puzzles:
+    std::sort(puzzles.begin(), puzzles.end());
+    puzzles.erase(std::unique(puzzles.begin(), puzzles.end()), puzzles.end());
+    assert(puzzles.size() == 1000 && "Duplicates detected!");
+
+    for (int i = 0; i < 1000; ++i) {
+        std::ofstream file(opt.puzzlePath + std::to_string(i) + ".pzl");
+        for (auto &p: puzzles[i]) {
+            file << p << " ";
+        }
+        file.close();
+    }
+
+    goal.Reset();
+    DynPermutationPDB<width, height, MNPuzzleState<width, height>, slideDir, MNPuzzle<width, height>> pdb(&mnp,
+                                                                                                          opt.patternMaxOrder);
+    pdb.SetGoal(&goal);
+    pdb.GetPDBs(std::string(opt.pdbPath));
+    unsigned int threads = std::thread::hardware_concurrency();
+    std::vector<LexPermutationPDB<MNPuzzleState<width, height>, slideDir, MNPuzzle<width, height>>> pdbs;
+#ifdef PUZZLE_SIZE
+#if PUZZLE_SIZE == 4
+    opt.patterns = {{0,  1,  2,  3,  4,  5,  6,  7},
+                    {0,  8,  9,  10, 11, 12, 13, 14, 15},
+                    {0,  1,  2,  4,  5,  8},
+                    {0,  3,  6,  7,  10, 11},
+                    {0,  9,  12, 13, 14, 15},
+                    {0,  1,  2,  4,  5,  8,  9},
+                    {0,  3,  6,  7,  10, 11, 15},
+                    {0,  12, 13, 14}};
+#elif PUZZLE_SIZE == 5
+    opt.patterns = {{0,  1,  5,  6,  10, 11, 12},
+                    {0,  2,  3,  4,  7,  8,  9},
+                    {0,  13, 14, 18, 19, 23, 24},
+                    {0,  15, 16, 17, 20, 21, 22},
+                    {0,  1,  2,  5,  6,  7,  12},
+                    {0,  3,  4,  8,  9,  13, 14},
+                    {0,  10, 11, 15, 16, 20, 21},
+                    {0,  17, 18, 19, 22, 23, 24}};
+#endif
+#endif
+    for (auto &p: opt.patterns) {
+        LexPermutationPDB<MNPuzzleState<width, height>, slideDir, MNPuzzle<width, height>> pdb(&mnp, goal, p);
+        pdbs.push_back(pdb);
+    }
+
+    for (auto &pdb: pdbs) {
+        if (!pdb.Load(opt.pdbPath.c_str())) {
+            mnp.SetPattern(pdb.GetDistinct());
+            pdb.BuildAdditivePDB(goal, threads);
+            pdb.Save(opt.pdbPath.c_str());
+        }
+    }
+}
