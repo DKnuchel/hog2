@@ -15,6 +15,7 @@
 #ifdef PUZZLE_SIZE
 #if PUZZLE_SIZE == 4
 #define SIZE 4
+#include "STPInstances.h"
 #elif PUZZLE_SIZE == 5
 #define SIZE 5
 #endif
@@ -56,7 +57,7 @@ typedef struct options {
 
     bool checkOptions() const {
         if (!puzzlePathSet & (mode != MODE::GENERATE)) {
-            std::cerr << "Missing puzzle!" << std::endl;
+            std::cerr << "Missing puzzle! " << puzzlePath << std::endl;
             return false;
         }
         if (!modeSet) {
@@ -109,6 +110,11 @@ options opt;
 options getOptions(int argc, const char *const *argv);
 
 int main(int argc, const char *argv[]) {
+    std::string args = "";
+    for (int i = 0; i < argc; ++i) {
+        args += (std::string) argv[i] + " ";
+    }
+    //std::cerr << args << std::endl;
     //std::cout << "PUZZLE_SIZE: " << PUZZLE_SIZE << " Size: " << SIZE << std::endl;
     opt = getOptions(argc, argv);
     switch (opt.mode) {
@@ -203,7 +209,8 @@ void BasicHeuristics() {
         goal.Reset();
         IDAStar<MNPuzzleState<width, height>, slideDir> ida;
         ida.GetPath(&mnp, start, goal, path);
-        printf("ida\t%1.2f\t%lu\t%lu\t%1.2fs elapsed\n", mnp.GetPathLength(start, path), ida.GetNodesExpanded(),
+        printf("ida\tLength: %1.2f\tExpanded: %lu\tGenerated: %lu\tTime: %1.2f\n",
+               mnp.GetPathLength(start, path), ida.GetNodesExpanded(),
                ida.GetNodesTouched(), t.EndTimer());
     }
 }
@@ -248,7 +255,8 @@ void StaticPDB() {
         ida.SetHeuristic(&h);
         std::vector<slideDir> path;
         ida.GetPath(&mnp, start, goal, path);
-        printf("ida\t%1.2f\t%lu\t%lu\t%1.2fs elapsed\n", mnp.GetPathLength(start, path), ida.GetNodesExpanded(),
+        printf("ida\tLength: %1.2f\tExpanded: %lu\tGenerated: %lu\tTime: %1.2f\n",
+               mnp.GetPathLength(start, path), ida.GetNodesExpanded(),
                ida.GetNodesTouched(), t.EndTimer());
     }
 }
@@ -303,7 +311,8 @@ void PhO(bool dual, bool is_integer) {
             start.puzzle[i] = _vec[0].puzzle[i];
         }
         ida.GetPath(&mnp, start, goal, path);
-        printf("ida\t%1.2f\t%lu\t%lu\t%1.2fs elapsed\n", mnp.GetPathLength(start, path), ida.GetNodesExpanded(),
+        printf("ida\tLength: %1.2f\tExpanded: %lu\tGenerated: %lu\tTime: %1.2f\n",
+               mnp.GetPathLength(start, path), ida.GetNodesExpanded(),
                ida.GetNodesTouched(), t.EndTimer());
     }
 }
@@ -373,6 +382,13 @@ void Generate() {
     std::vector<LexPermutationPDB<MNPuzzleState<width, height>, slideDir, MNPuzzle<width, height>>> pdbs;
 #ifdef PUZZLE_SIZE
 #if PUZZLE_SIZE == 4
+    for (int i = 0; i < 100; ++i) {
+        std::ofstream file(opt.puzzlePath + "korf" + std::to_string(i) + ".pzl");
+        for (auto &p: STP::GetKorfInstance(i).puzzle) {
+            file << p << " ";
+        }
+        file.close();
+    }
     opt.patterns = {{0,  1,  2,  3,  4,  5,  6,  7},
                     {0,  8,  9,  10, 11, 12, 13, 14, 15},
                     {0,  1,  2,  4,  5,  8},
@@ -382,14 +398,14 @@ void Generate() {
                     {0,  3,  6,  7,  10, 11, 15},
                     {0,  12, 13, 14}};
 #elif PUZZLE_SIZE == 5
-    opt.patterns = {{0,  1,  5,  6,  10, 11, 12},
-                    {0,  2,  3,  4,  7,  8,  9},
-                    {0,  13, 14, 18, 19, 23, 24},
-                    {0,  15, 16, 17, 20, 21, 22},
-                    {0,  1,  2,  5,  6,  7,  12},
-                    {0,  3,  4,  8,  9,  13, 14},
-                    {0,  10, 11, 15, 16, 20, 21},
-                    {0,  17, 18, 19, 22, 23, 24}};
+    opt.patterns = {{0, 1,  5,  6,  10, 11, 12},
+                    {0, 2,  3,  4,  7,  8,  9},
+                    {0, 13, 14, 18, 19, 23, 24},
+                    {0, 15, 16, 17, 20, 21, 22},
+                    {0, 1,  2,  5,  6,  7,  12},
+                    {0, 3,  4,  8,  9,  13, 14},
+                    {0, 10, 11, 15, 16, 20, 21},
+                    {0, 17, 18, 19, 22, 23, 24}};
 #endif
 #endif
     for (auto &p: opt.patterns) {

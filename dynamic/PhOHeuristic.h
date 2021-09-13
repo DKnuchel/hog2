@@ -87,7 +87,6 @@ double PhOHeuristic<width, height, state, action, environment>::GetPhOHeuristic(
     for (auto cost: operatorCosts) {
         hVal += cost;
     }
-
     return hVal;
 }
 
@@ -109,7 +108,7 @@ double PhOHeuristic<width, height, state, action, environment>::GetPhOHDualHeuri
     //Generate constraints:
     //Iterate over tile-vectors
     for (int i = 0; i < sortedPatterns.size(); ++i) {
-        lp::LPConstraint constraint(-lps->get_infinity(), 1);
+        lp::LPConstraint constraint(0, 1); //if all variables must be atleast 0, the constraint can't be less than 0.
         //Iterate over patterns which include tile i
         for (int j = 0; j < sortedPatterns[i].size(); ++j) {
             constraint.insert(sortedPatterns[i][j], 1);
@@ -128,8 +127,11 @@ double PhOHeuristic<width, height, state, action, environment>::GetPhOHDualHeuri
 
     std::vector<double> operatorCosts = lps->extract_solution();
     double hVal = 0.0;
-    for (auto cost: operatorCosts) {
-        hVal += cost;
+    for (int i = 0; i < heuristicsSize; ++i) {
+        hVal += operatorCosts[i] * h->heuristics[i]->HCost(a, goal);
+    }
+    for (int i = 0; i < tiles; ++i) {
+        hVal += operatorCosts[i + heuristicsSize] * GetTileManDist(i + 1, a);
     }
     return hVal;
 }
