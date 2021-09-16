@@ -16,10 +16,10 @@ from lab.reports import Attribute, Report, geometric_mean
 NODE = platform.node()
 REMOTE = NODE.endswith(".scicore.unibas.ch") or NODE.endswith(".cluster.bc2.ch")
 TIME_LIMIT = 1800 
-MEMORY_LIMIT = 6144
+MEMORY_LIMIT = 6354
 
 if REMOTE:
-    ENV = BaselSlurmEnvironment(email="damian.knuchel@unibas.ch")
+    ENV = BaselSlurmEnvironment(partition="infai_2", memory_per_cpu="6354M", email="damian.knuchel@unibas.ch")
     SUITE = range(1000)
 else:
     ENV = LocalEnvironment(processes=2)
@@ -30,9 +30,9 @@ else:
 # Create a new experiment.
 exp = Experiment(environment=ENV)
 # Add solver to experiment and make it available to all runs.
-exp.add_resource("hog2", "/home/damian/CLionProjects/hog2/RandomDirectoryName/Hog2", symlink=True) # revision hash als doc; # potential als symlink
-exp.add_resource("pdb", "/home/damian/CLionProjects/hog2/RandomDirectoryName/pdbs", symlink=True)
-exp.add_resource("input", "/home/damian/CLionProjects/hog2/RandomDirectoryName/15puzzles", symlink=True)
+exp.add_resource("hog2", "../expBuild/Hog2", symlink=True) # revision hash als doc; # potential als symlink
+exp.add_resource("pdb", "../expBuild/pdbs", symlink=True)
+exp.add_resource("input", "../expBuild/15puzzles", symlink=True)
 
 
 ALGORITHMS = {
@@ -43,10 +43,10 @@ ALGORITHMS = {
    #"static": ["-m", "PDB", "--static", "-p", "((1,2,4,5,8,9)(3,6,7,10,11,15)(12,13,14))"] ,
 
 
-   "pho-primal": ["-m", "PDB", "--pho", "-p", "4"] ,
-   "pho-dual": ["-m", "PDB", "--pho", "-p", "4"] ,
-   "wvc-primal": ["-m", "PDB", "--pho", "-p", "4", "--integer"] ,
-   "wvc-dual": ["-m", "PDB", "--pho", "-p", "4", "--integer", "--dual"] ,
+   #"pho-primal": ["-m", "PDB", "--pho", "-p", "4"] ,
+   #"pho-dual": ["-m", "PDB", "--pho", "-p", "4"] ,
+   #"wvc-primal": ["-m", "PDB", "--pho", "-p", "4", "--integer"] ,
+   #"wvc-dual": ["-m", "PDB", "--pho", "-p", "4", "--integer", "--dual"] ,
 }
 
 for algo_name, algo_params in ALGORITHMS.items():
@@ -106,7 +106,7 @@ class BaseReport(AbsoluteReport):
 
 ATTRIBUTES = [
     Attribute("length", min_wins=True),
-    Attribute("expansion", min_wins=True, function=geometric_mean),
+    Attribute("expansions", min_wins=True, function=geometric_mean),
     Attribute("generated", min_wins=True, function=geometric_mean),
     Attribute("time", min_wins=True, function=geometric_mean),
 ]

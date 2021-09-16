@@ -6,10 +6,13 @@
 //TODO: Remove action and environment from template
 template<int width, int height, class state, class action, class environment>
 class PhOHeuristic : public Heuristic<state> {
+
 public:
     PhOHeuristic(Heuristic<state> *h, state goal, bool dual = false, bool is_integer = false) : h(h), goal(goal),
                                                                                                 dual(dual), is_integer(
-                    is_integer) {};
+                    is_integer) {
+        lps.reset(new lp::LPSolver(lp::LPSolverType::CPLEX));
+    };
 
     virtual ~PhOHeuristic() {}
 
@@ -22,12 +25,19 @@ private:
 
     double GetPhOHeuristic(const state &a) const;
 
+    void UpdatePhoHeuristic(const state &a) const;
+
     double GetPhOHDualHeuristic(const state &a) const;
 
     std::vector<std::vector<int>> sortedPatterns;
     Heuristic<state> *h;
     state goal;
+    mutable bool firstRun = true;
+    bool resolveLP = true;
+    mutable std::unique_ptr<lp::LPSolver> lps;
+
     constexpr static int tiles = width * height - 1;
+
 protected:
     bool is_integer = false;
     bool dual = false;
@@ -56,43 +66,63 @@ double PhOHeuristic<width, height, state, action, environment>::GetTileManDist(i
     unsigned int yS = std::floor(itS / width);
     return (std::abs((int) (xG - xS))) + (std::abs((int) (yG - yS)));
 }
-
+//TODO: Check with previous state für differences, only resolve if less than {X}, else reset the lps
 template<int width, int height, class state, class action, class environment>
 double PhOHeuristic<width, height, state, action, environment>::GetPhOHeuristic(const state &a) const {
-    std::unique_ptr<lp::LPSolver> lps(new lp::LPSolver(lp::LPSolverType::CPLEX));
-    named_vector::NamedVector<lp::LPVariable> vars;
-    std::vector<int> pattern;
-    named_vector::NamedVector<lp::LPConstraint> constraints;
 
-    for (int i = 1; i < width * height; ++i) {
-        vars.emplace_back(GetTileManDist(i, a), lps->get_infinity(), 0, is_integer);
-    }
+    if (firstRun || !resolveLP) {
+        firstRun = false;
+        lps.reset(new lp::LPSolver(lp::LPSolverType::CPLEX));
+        named_vector::NamedVector<lp::LPVariable> vars;
+        named_vector::NamedVector<lp::LPConstraint> constraints;
 
-    for (auto &tmph: h->heuristics) {
-        pattern = dynamic_cast<PermutationPDB<state, action, environment> *>(tmph)->GetDistinct();
-        lp::LPConstraint constraint(tmph->HCost(a, goal), lps->get_infinity());
-        for (int i = 1; i < pattern.size(); i++) {
-            int tile = pattern[i];
-            constraint.insert(tile - 1, 1);
+        for (int i = 1; i < width * height; ++i) {
+            vars.emplace_back(GetTileManDist(i, a), lps->get_infinity(), 1, is_integer);
         }
-        constraints.push_back(std::move(constraint));
 
+        std::vector<int> pattern;
+
+        for (auto &tmph: h->heuristics) {
+            pattern = dynamic_cast<PermutationPDB<state, action, environment> *>(tmph)->GetDistinct();
+            lp::LPConstraint constraint(tmph->HCost(a, goal), lps->get_infinity());
+            for (int i = 1; i < pattern.size(); i++) {
+                int tile = pattern[i];
+                constraint.insert(tile - 1, 1);
+            }
+            constraints.push_back(std::move(constraint));
+
+        }
+
+        lp::LinearProgram linearProgram(lp::LPObjectiveSense::MINIMIZE, std::move(vars), std::move(constraints));
+        lps->load_problem(linearProgram);
+    } else {
+        UpdatePhoHeuristic(a);
     }
-
-    lp::LinearProgram linearProgram(lp::LPObjectiveSense::MINIMIZE, std::move(vars), std::move(constraints));
-    lps->load_problem(linearProgram);
     lps->solve(); //X_1 + X_2 + X_4 >= h{1,2,4}
     std::vector<double> operatorCosts = lps->extract_solution();
     double hVal = 0.0;
     for (auto cost: operatorCosts) {
         hVal += cost;
     }
-    return hVal;
+    return (int) hVal;
+}
+
+template<int width, int height, class state, class action, class environment>
+void PhOHeuristic<width, height, state, action, environment>::UpdatePhoHeuristic(const state &a) const {
+    // Update variables lower bound
+    for (int i = 1; i < width * height; ++i) {
+        this->lps->set_variable_lower_bound(i - 1, GetTileManDist(i, a));
+    }
+    std::vector<int> pattern;
+    // Update constraints lower bound
+    for (int i = 0; i < h->heuristics.size(); ++i) {
+        this->lps->set_constraint_lower_bound(i, h->heuristics[i]->HCost(a, goal));
+    }
 }
 
 template<int width, int height, class state, class action, class environment>
 double PhOHeuristic<width, height, state, action, environment>::GetPhOHDualHeuristic(const state &a) const {
-    std::unique_ptr<lp::LPSolver> lps(new lp::LPSolver(lp::LPSolverType::CPLEX));
+    //TODO: Write Update function for the dual problem
     named_vector::NamedVector<lp::LPVariable> vars;
     named_vector::NamedVector<lp::LPConstraint> constraints;
     int heuristicsSize = h->heuristics.size();
@@ -155,4 +185,5 @@ void PhOHeuristic<width, height, state, action, environment>::SetSortedPatterns(
         }
     }
 }
+
 

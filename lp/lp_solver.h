@@ -14,6 +14,7 @@
   if the planner is compiled with USE_LP. Otherwise, they just print
   an error message and abort.
 */
+#define USE_LP true
 #ifdef USE_LP
 #define LP_METHOD(X) X;
 #else
@@ -27,9 +28,6 @@
 class CoinPackedVectorBase;
 class OsiSolverInterface;
 
-namespace options {
-class OptionParser;
-}
 
 namespace lp {
 enum class LPSolverType {
@@ -39,8 +37,6 @@ enum class LPSolverType {
 enum class LPObjectiveSense {
     MAXIMIZE, MINIMIZE
 };
-
-void add_lp_solver_option_to_parser(options::OptionParser &parser);
 
 class LinearProgram;
 

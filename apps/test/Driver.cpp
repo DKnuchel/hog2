@@ -22,6 +22,7 @@
 #endif
 //#define PUZZLE_SIZE @PUZZLE_SIZE@
 const int width = SIZE, height = SIZE;
+//const int width = 2, height = 3;
 
 enum MODE {
     MD,
@@ -47,6 +48,7 @@ typedef struct options {
     std::string pdbPath;
     int patternMaxOrder;
     bool isInteger = false;
+    bool isFiltered = false;
 
     bool puzzlePathSet = false;
     bool patternsSet = false;
@@ -101,9 +103,9 @@ void PhO(bool dual, bool is_integer);
 
 void Generate();
 
-std::vector<std::vector<int>> extractPattern(std::string str);
+std::vector<std::vector<int>> extractPDBPattern(std::string str);
 
-std::vector<std::string> splitter(std::string str, std::string del);
+//std::vector<std::string> splitter(std::string str, std::string del);
 
 options opt;
 
@@ -112,7 +114,7 @@ options getOptions(int argc, const char *const *argv);
 int main(int argc, const char *argv[]) {
     std::string args = "";
     for (int i = 0; i < argc; ++i) {
-        args += (std::string) argv[i] + " ";
+        args += static_cast<std::string>(argv[i]) + " ";
     }
     //std::cerr << args << std::endl;
     //std::cout << "PUZZLE_SIZE: " << PUZZLE_SIZE << " Size: " << SIZE << std::endl;
@@ -120,72 +122,83 @@ int main(int argc, const char *argv[]) {
     switch (opt.mode) {
         case MD:
             BasicHeuristics();
+            break;
         case LC:
             BasicHeuristics();
+            break;
         case PDB:
             switch (opt.pdbMode) {
                 case STATIC:
                     StaticPDB();
+                    break;
                 case DYNAMIC:
                     PhO(true, true);
+                    break;
                 case PHO:
                     switch (opt.phoMode) {
                         case PRIME:
                             PhO(false, opt.isInteger);
+                            break;
                         case DUAL:
                             PhO(true, opt.isInteger);
+                            break;
                     }
+                    break;
             }
+            break;
         case GENERATE:
             Generate();
+            break;
     }
 }
-
+//TODO: Add option if a lp should be newly generated or resolved with updated values, bool already exists in {PhOHeuristic.h}
 options getOptions(int argc, const char *const *argv) {
     options _opt;
 
     for (int i = 0; i < argc; ++i) {
-        if ((std::string) argv[i] == "-i") {
-            _opt.puzzlePath = (std::string) argv[++i];
+        if (static_cast<std::string>(argv[i]) == "-i") {
+            _opt.puzzlePath = static_cast<std::string>(argv[++i]);
             _opt.puzzlePathSet = true;
-        } else if ((std::string) argv[i] == "-p") {
-            if (((std::string) argv[++i]).size() > 4) {
-                _opt.patterns = extractPattern((std::string) argv[i]);
+        } else if (static_cast<std::string>(argv[i]) == "-p") {
+            if ((static_cast<std::string>(argv[++i])).size() > 4) {
+                _opt.patterns = extractPDBPattern(static_cast<std::string>(argv[i]));
                 _opt.patternsSet = true;
             } else {
                 _opt.patternMaxOrder = std::stoi(argv[i]);
                 _opt.patternMaxOrderSet = true;
             }
-        } else if ((std::string) argv[i] == "-m") {
-            if ((std::string) argv[++i] == "MD") {
+        } else if (static_cast<std::string>(argv[i]) == "-m") {
+            if (static_cast<std::string>(argv[++i]) == "MD") {
                 _opt.mode = MD;
                 _opt.modeSet = true;
-            } else if ((std::string) argv[i] == "LC") {
+            } else if (static_cast<std::string>(argv[i]) == "LC") {
                 _opt.mode = LC;
                 _opt.modeSet = true;
-            } else if ((std::string) argv[i] == "PDB") {
+            } else if (static_cast<std::string>(argv[i]) == "PDB") {
                 _opt.mode = PDB;
                 _opt.modeSet = true;
-            } else if ((std::string) argv[i] == "GENERATE") {
+            } else if (static_cast<std::string>(argv[i]) == "GENERATE") {
                 _opt.mode = GENERATE;
                 _opt.modeSet = true;
             }
-        } else if ((std::string) argv[i] == "--static") {
+        } else if (static_cast<std::string>(argv[i]) == "--static") {
             _opt.pdbMode = STATIC;
             _opt.pdbModeSet = true;
-        } else if ((std::string) argv[i] == "--dynamic") {
+        } else if (static_cast<std::string>(argv[i]) == "--dynamic") {
             _opt.pdbMode = DYNAMIC;
             _opt.pdbModeSet = true;
-        } else if ((std::string) argv[i] == "--pho") {
+        } else if (static_cast<std::string>(argv[i]) == "--pho") {
             _opt.pdbMode = PHO;
             _opt.pdbModeSet = true;
-        } else if ((std::string) argv[i] == "--dual") {
+        } else if (static_cast<std::string>(argv[i]) == "--dual") {
             _opt.phoMode = DUAL;
-        } else if ((std::string) argv[i] == "--integer") {
+        } else if (static_cast<std::string>(argv[i]) == "--integer") {
             _opt.isInteger = true;
-        } else if ((std::string) argv[i] == "-d") {
-            _opt.pdbPath = (std::string) argv[++i];
+        } else if (static_cast<std::string>(argv[i]) == "-d") {
+            _opt.pdbPath = static_cast<std::string>(argv[++i]);
             _opt.pdbPathSet = true;
+        } else if (static_cast<std::string>(argv[i]) == "--filtered") {
+            _opt.isFiltered = true;
         }
     }
     if (!_opt.checkOptions())
@@ -273,6 +286,8 @@ void PhO(bool dual, bool is_integer) {
 
     DynPermutationPDB<width, height, MNPuzzleState<width, height>, slideDir, MNPuzzle<width, height>> pdb(&mnp,
                                                                                                           opt.patternMaxOrder);
+    pdb.SetFiltered(opt.isFiltered);
+
     pdb.SetGoal(&goal);
 
     std::vector<LexPermutationPDB<MNPuzzleState<width, height>, slideDir, MNPuzzle<width, height>>> pdbs = pdb.GetPDBs(
@@ -318,7 +333,7 @@ void PhO(bool dual, bool is_integer) {
 }
 
 
-std::vector<std::vector<int>> extractPattern(std::string str) {
+std::vector<std::vector<int>> extractPDBPattern(std::string str) {
     std::vector<std::string> strPattern = splitter(str, ")(");
     std::vector<std::vector<int>> pattern;
     for (auto &s: strPattern) {
@@ -332,7 +347,7 @@ std::vector<std::vector<int>> extractPattern(std::string str) {
     }
     return pattern;
 }
-
+/*
 std::vector<std::string> splitter(std::string str, std::string del) {
     int start = 0;
     int end = str.find(del);
@@ -345,7 +360,7 @@ std::vector<std::string> splitter(std::string str, std::string del) {
     ret.push_back(str.substr(start, end - start));
     return ret;
 }
-
+*/
 void Generate() {
     opt.patternMaxOrder = 4;
     MNPuzzle<width, height> mnp;

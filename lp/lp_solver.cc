@@ -2,8 +2,6 @@
 
 #include "lp_internals.h"
 
-//#include "../3rdparty/option_parser.h"
-
 #include "../3rdparty/utils/logging.h"
 #include "../3rdparty/utils/system.h"
 
@@ -28,30 +26,7 @@ using namespace std;
 using utils::ExitCode;
 
 namespace lp {
-    /*
-void add_lp_solver_option_to_parser(OptionParser &parser) {
-    parser.document_note(
-        "Note",
-        "to use an LP solver, you must build the planner with LP support. "
-        "See LPBuildInstructions.");
-    vector<string> lp_solvers;
-    vector<string> lp_solvers_doc;
-    lp_solvers.push_back("CLP");
-    lp_solvers_doc.push_back("default LP solver shipped with the COIN library");
-    lp_solvers.push_back("CPLEX");
-    lp_solvers_doc.push_back("commercial solver by IBM");
-    lp_solvers.push_back("GUROBI");
-    lp_solvers_doc.push_back("commercial solver");
-    lp_solvers.push_back("SOPLEX");
-    lp_solvers_doc.push_back("open source solver by ZIB");
-    parser.add_enum_option<LPSolverType>(
-        "lpsolver",
-        lp_solvers,
-        "external solver that should be used to solve linear programs",
-        "CPLEX",
-        lp_solvers_doc);
-}
-*/
+
 LPConstraint::LPConstraint(double lower_bound, double upper_bound)
     : lower_bound(lower_bound),
       upper_bound(upper_bound) {

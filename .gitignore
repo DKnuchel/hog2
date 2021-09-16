@@ -3,7 +3,7 @@ objs/
 html/
 objs_html/
 RandomDirectoryName/
-
+experiments/data/
 
 # Created by https://www.toptal.com/developers/gitignore/api/xcode,cmake,c++,visualstudio,macos,windows,linux
 # Edit at https://www.toptal.com/developers/gitignore?templates=xcode,cmake,c++,visualstudio,macos,windows,linux
