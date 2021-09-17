@@ -57,7 +57,7 @@ for algo_name, algo_params in ALGORITHMS.items():
         # print(os.path.dirname(os.path.realpath(__file__)))
         run.add_command(
             "solve",
-            ["{hog2}", "-i", "{input}/" + puzzle_instance + ".pzl" , "-d", "{pdb}/", *algo_params],
+            ["{hog2}", "-i", "{input}/" + str(puzzle_instance) + ".pzl" , "-d", "{pdb}/", *algo_params],
             time_limit=TIME_LIMIT,
             memory_limit=MEMORY_LIMIT,
         )
