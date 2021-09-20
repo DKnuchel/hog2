@@ -192,72 +192,41 @@ DynPermutationPDB<width, height, state, action, environment>::YeetPDB(LexPermuta
     std::vector<int> distinct = p.GetDistinct();
     distinct.erase(distinct.begin());
     std::vector<std::vector<std::vector<int>>> partitions;
-    int compare = 0;
-    int failed = 0;
-    for (int i = 2; i <= distinct.size(); i++) {
-        partitions = GetPartitions(distinct, i);
-        for (auto &partition: partitions) {
-            for (int hash = 0; hash < p.PDB.Size(); ++hash) {
-                state concreteState;
-                p.GetStateFromPDBHash(hash, concreteState);
-                std::vector<LexPermutationPDB<state, action, environment>> pdbVec;
+    state concreteState;
+    for (int i = 2; i <= distinct.size(); i++) { //Partitiong into i sets
+        partitions = GetPartitions(distinct, i); //generate set of partitions
+        for (auto &partition: partitions) { //for each possible partition
+            int compare = 0;
+            for (int hash = 0; hash < p.PDB.Size(); ++hash) { //for each possible state
+                p.GetStateFromPDBHash(hash, concreteState); //generate a concrete state from the abstract state (hash)
                 double sum = 0.0;
-                for (auto &tiles: partition) {
-                    if (tiles.size() > 1) {
-                        std::vector<int> tmpPattern = {0};
+                for (auto &tiles: partition) { //for each set of tiles in the partition set
+                    if (tiles.size() > 1) { //if HCost is found in the pdbs
+                        std::vector<int> tmpPattern = {0}; //add 0 element to the beginning of the pattern
                         tmpPattern.insert(tmpPattern.end(), tiles.begin(), tiles.end());
-                        LexPermutationPDB<state, action, environment> pdb(&mnp, *goal, tmpPattern);
-                        pdbVec.push_back(pdb);
-                    } else sum += GetTileManDist(tiles[0], concreteState);
+                        LexPermutationPDB<state, action, environment> pdb(&mnp, *goal, tmpPattern); //get pdb of pattern
+                        if (pdb.Load(path.c_str())) sum += pdb.HCost(concreteState, *goal); //Add HCost from pdb to sum
+                    } else if (tiles.size() == 1)
+                        sum += GetTileManDist(tiles[0],
+                                              concreteState); //If only one tile, get Manhattan Distance of tile and add to sum
                 }
-                for (auto &pdb: pdbVec) {
-                    if (pdb.Load(path.c_str())) sum += pdb.HCost(concreteState, *goal);
-                    else break;
-                }
-                if (p.HCost(concreteState, *goal) <= sum) ++failed;
-                ++compare;
+                if (p.HCost(concreteState, *goal) > sum) {
+                    ++compare;
+                    break;
+                } //if there is even one case where p improves the heuristic compared to the partition, we can go on to the next partition.
             }
+            if (compare == 0) {
+                std::cout << "Removed - " << p.GetFileName(std::string(path).c_str()) << std::endl;
+                return true;
+            } //if the pdb was no improvement compared to the partition set
         }
     }
-    std::cout << p.GetFileName(std::string("./pdbs/").c_str()) << ": " << (compare == failed) << std::endl;
-    if (compare == failed) return true;
-
+    //To reach this point, there exists no additive partitioning of the pattern with the same optimality.
     std::ofstream file(path + "yeeted", std::fstream::app);
     for (auto &t: distinct) file << t << " ";
     file << "\n";
     file.close();
     return false;
-    /*
-       for (int hash = 0; hash < p.PDB.Size(); ++hash) {
-           state concrete_state;
-           p.GetStateFromPDBHash(hash, concrete_state); //add multithreading
-           for (auto &partition: GetPartitions(distinct)) {
-               std::vector<LexPermutationPDB<state, action, environment>> pdbs;
-               double sum = 0.0;
-               for (auto &tiles: partition) {
-                   for (auto &t : tiles) std::cout << t << " ";
-                   if (tiles.size() > 1) {
-                       std::vector<int> tmpPattern = {0};
-                       tmpPattern.insert(tmpPattern.end(), tiles.begin(), tiles.end());
-                       LexPermutationPDB<MNPuzzleState<width, height>, slideDir, MNPuzzle<width, height>> pdb(&mnp, *goal,
-                                                                                                              tmpPattern);
-                       pdbs.push_back(pdb);
-                   } else sum += GetTileManDist(tiles[0], concrete_state);
-                   std::cout << " | ";
-               }
-               std::cout << std::endl;
-               for (auto &pdb: pdbs) {
-                   if (pdb.Load(path.c_str())) {
-                       sum += pdb.HCost(concrete_state, *goal);
-                   } else {
-                       break;
-                   }
-               }
-               if (p.HCost(concrete_state, *goal) < sum) return true;
-           }
-       }
-       return false;
-       */
 }
 
 
@@ -267,43 +236,6 @@ DynPermutationPDB<width, height, state, action, environment>::YeetPDB(LexPermuta
 template<int width, int height, class state, class action, class environment>
 std::vector<std::vector<std::vector<int>>>
 DynPermutationPDB<width, height, state, action, environment>::GetPartitions(std::vector<int> pattern, int m) {
-    /*
-    std::vector<std::vector<std::vector<int>>> fList;
-
-    std::vector<std::vector<int>> lists;
-    std::vector<int> indexes(elements.size(), 0); // Allocate?
-    lists.emplace_back(std::vector<int>());
-    lists[0].insert(lists[0].end(), elements.begin(), elements.end());
-    for (;;) {
-        fList.emplace_back(lists);
-
-        int i, index;
-        bool obreak = false;
-        for (i = indexes.size() - 1;; --i) {
-            if (i <= 0) {
-                obreak = true;
-                break;
-            }
-            index = indexes[i];
-            lists[index].erase(lists[index].begin() + lists[index].size() - 1);
-            if (lists[index].size() > 0)
-                break;
-            lists.erase(lists.begin() + index);
-        }
-        if (obreak) break;
-
-        ++index;
-        if (index >= lists.size())
-            lists.emplace_back(std::vector<int>());
-        for (; i < indexes.size(); ++i) {
-            indexes[i] = index;
-            lists[index].emplace_back(elements[i]);
-            index = 0;
-        }
-
-    }
-    return fList;
-     */
     std::vector<std::vector<std::vector<int>>> ret;
     if (pattern.size() < m || m < 1) return ret;
     if (m == 1) {

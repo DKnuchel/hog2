@@ -12,6 +12,7 @@
 #include <vector>
 #include <cstdint>
 #include <cstddef>
+#include <iostream>
 
 enum HeuristicTreeNodeType {
 	kMaxNode,
@@ -75,7 +76,7 @@ public:
 template <class state>
 double Heuristic<state>::HCost(const state &s1, const state &s2) const
 {
-	return HCost(s1, s2, 0);
+    return HCost(s1, s2, 0);
 }
 
 template <class state>
@@ -105,7 +106,7 @@ double Heuristic<state>::HCost(const state &s1, const state &s2, int treeNode) c
 		} break;
 		case kDynNode:
 		{
-			hval = heuristics[lookups[treeNode].whichNode]->HCost(s1, s2);
+			hval = heuristics[0]->HCost(s1, s2);
 		}break;
 		
 	}

@@ -1,2 +1,7 @@
+export DOWNWARD_CPLEX_ROOT=~/local/ibm/ILOG/CPLEX_Studio129/cplex
+export DOWNWARD_CPLEX_ROOT=~/local/ibm/ILOG/CPLEX_Studio129/cplex
+
+
+
 python3 -m venv --prompt Hog2 .venv
 ->	source .venv/bin/activate

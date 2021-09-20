@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.15)
 set(CMAKE_CXX_STANDARD 11)
-
+set(CMAKE_BUILD_TYPE DEBUG)
 message([status] ${CMAKE_CXX_COMPILER_ID})
 
 include(cmake/ucm.cmake)

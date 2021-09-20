@@ -22,7 +22,7 @@
 #endif
 //#define PUZZLE_SIZE @PUZZLE_SIZE@
 const int width = SIZE, height = SIZE;
-//const int width = 2, height = 3;
+//const int width = 2, height = 2;
 
 enum MODE {
     MD,
@@ -88,8 +88,8 @@ typedef struct options {
             std::cerr << "Missing Pattern!";
         }
         if (patternMaxOrderSet & (patternMaxOrder < 2)) {
-            std::cerr << "Order must be at least 2" << std::endl;
-            return false;
+            //std::cerr << "Order must be at least 2" << std::endl;
+            //return false;
         }
         return true;
     };
@@ -102,6 +102,7 @@ void StaticPDB();
 void PhO(bool dual, bool is_integer);
 
 void Generate();
+void Test();
 
 std::vector<std::vector<int>> extractPDBPattern(std::string str);
 
@@ -112,6 +113,8 @@ options opt;
 options getOptions(int argc, const char *const *argv);
 
 int main(int argc, const char *argv[]) {
+    //Test();
+    //exit(0);
     std::string args = "";
     for (int i = 0; i < argc; ++i) {
         args += static_cast<std::string>(argv[i]) + " ";
@@ -151,6 +154,7 @@ int main(int argc, const char *argv[]) {
             break;
     }
 }
+
 //TODO: Add option if a lp should be newly generated or resolved with updated values, bool already exists in {PhOHeuristic.h}
 options getOptions(int argc, const char *const *argv) {
     options _opt;
@@ -208,7 +212,7 @@ options getOptions(int argc, const char *const *argv) {
 
 
 void BasicHeuristics() {
-    MNPuzzle<width, height> mnp;
+    MNPuzzle<width, height> mnp;//({kRight, kLeft, kDown, kUp});
     MNPuzzleState<width, height> start, goal;
     std::vector<slideDir> path;
     mnp.Set_Use_Manhattan_Heuristic((opt.mode == MODE::MD));
@@ -229,7 +233,7 @@ void BasicHeuristics() {
 }
 
 void StaticPDB() {
-    MNPuzzle<width, height> mnp;
+    MNPuzzle<width, height> mnp;//({kRight, kLeft, kDown, kUp});
     Heuristic<MNPuzzleState<width, height>> h;
     MNPuzzleState<width, height> start, goal;
     std::vector<slideDir> moves;
@@ -244,9 +248,10 @@ void StaticPDB() {
     }
 
     h.lookups.resize(0);
-    h.lookups.push_back({kAddNode, 1, 2});
+    h.lookups.push_back({kAddNode, 1,3});
     h.lookups.push_back({kLeafNode, 0, 0});
     h.lookups.push_back({kLeafNode, 1, 1});
+    if (opt.patterns.size() > 2) h.lookups.push_back({kLeafNode, 2, 2});
 
     h.heuristics.resize(0);
     for (auto &pdb: pdbs) {
@@ -274,8 +279,32 @@ void StaticPDB() {
     }
 }
 
+void Test() {
+    MNPuzzle<width, height> mnp({kRight, kLeft, kDown, kUp});
+    MNPuzzleState<width, height> start, goal;
+    goal.Reset();
+    mnp.StoreGoal(goal);
+    std::vector<int> p = {0,1,2};
+    mnp.SetPattern(p);
+    start.puzzle = {1,2,0,3};
+    //LexPermutationPDB<MNPuzzleState<width, height>, slideDir, MNPuzzle<width, height>> pdb(&mnp, goal, p);
+    LexPermutationPDB<MNPuzzleState<width, height>, slideDir, MNPuzzle<width, height>> pdb2(&mnp, goal, p);
+    //start.puzzle = {2,1,0,4,5,3};
+    /*
+    pdb.Load("./pdbs/");
+    pdb2.BuildAdditivePDB(goal, 4);
+    for(int i = 0; i < pdb.PDB.Size(); ++i) {
+        std::cout << pdb.PDB.Get(i) << ", ";
+    }std::cout << std::endl;
+     */
+    for(int i = 0; i < pdb2.PDB.Size(); ++i) {
+        std::cout << pdb2.PDB.Get(i) << ", ";
+    }std::cout << std::endl;
+    //std::cout << pdb.HCost(start, goal) << std::endl;
+}
+
 void PhO(bool dual, bool is_integer) {
-    MNPuzzle<width, height> mnp;
+    MNPuzzle<width, height> mnp;//({kRight, kLeft, kDown, kUp});
     Heuristic<MNPuzzleState<width, height>> h1;
     MNPuzzleState<width, height> start, goal;
     std::vector<slideDir> moves;
@@ -309,7 +338,9 @@ void PhO(bool dual, bool is_integer) {
 
     Heuristic<MNPuzzleState<width, height>> h2;
     h2.lookups.resize(0);
+    //h2.lookups.push_back({kMaxNode, 0, 1});
     h2.lookups.push_back({kDynNode, 0, 0});
+    //h2.lookups.push_back({kLeafNode, 0, 0});
     h2.heuristics.resize(0);
     h2.heuristics.push_back(&pho);
 
@@ -320,12 +351,18 @@ void PhO(bool dual, bool is_integer) {
         ida.SetHeuristic(&h2);
         std::vector<slideDir> path;
         std::vector<MNPuzzleState<width, height>> _vec;
+        /*
         if (MNPuzzle<width, height>::read_in_mn_puzzles(opt.puzzlePath.c_str(), false, 1, _vec) == 1)
             std::cerr << "Failed to read puzzle!" << std::endl;
         for (int i = 0; i < _vec[0].puzzle.size(); ++i) {
             start.puzzle[i] = _vec[0].puzzle[i];
         }
+         */
+        MNPuzzle<width, height>::read_in_mn_puzzles(opt.puzzlePath.c_str(), false, 1, _vec);
+        start = _vec[0];
         ida.GetPath(&mnp, start, goal, path);
+        //std::vector<MNPuzzleState<width,height>> spath;
+        //ida.GetPath(&mnp, start, goal, spath);
         printf("ida\tLength: %1.2f\tExpanded: %lu\tGenerated: %lu\tTime: %1.2f\n",
                mnp.GetPathLength(start, path), ida.GetNodesExpanded(),
                ida.GetNodesTouched(), t.EndTimer());
@@ -347,6 +384,7 @@ std::vector<std::vector<int>> extractPDBPattern(std::string str) {
     }
     return pattern;
 }
+
 /*
 std::vector<std::string> splitter(std::string str, std::string del) {
     int start = 0;

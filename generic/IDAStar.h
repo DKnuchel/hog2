@@ -47,7 +47,9 @@ public:
 
     void SetHeuristic(Heuristic<state> *heur) {
         heuristic = heur;
-        if (heur != 0) storedHeuristic = true;
+        if (heur != 0) {
+            storedHeuristic = true;
+        }
     }
 
 private:
@@ -137,7 +139,7 @@ void IDAStar<state, action, verbose>::GetPath(SearchEnvironment<state, action> *
         return;
 
     double rootH = heuristic->HCost(from, to);
-    std::cout << "Initial Heuristic: " << rootH << std::endl;
+    std::cout << "initial_h_value: " << rootH << std::endl;
     UpdateNextBound(0, rootH);
     goal = to;
     std::vector<action> act;
@@ -150,7 +152,7 @@ void IDAStar<state, action, verbose>::GetPath(SearchEnvironment<state, action> *
             printf("Starting iteration with bound %f; %llu expanded, %llu generated\n", nextBound, nodesExpanded,
                    nodesTouched);
         fflush(stdout);
-        DoIteration(env, act[0], from, thePath, nextBound, 0, 0, rootH);
+        double d = DoIteration(env, act[0], from, thePath, nextBound, 0, 0, rootH);
         PrintGHistogram();
     }
 }

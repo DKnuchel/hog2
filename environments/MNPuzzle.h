@@ -20,6 +20,7 @@
 #include "GraphEnvironment.h"
 #include <sstream>
 #include <array>
+//#include "PhOHeuristic.h"
 
 template<int width, int height>
 class MNPuzzleState {
@@ -281,7 +282,11 @@ public:
         use_manhattan = true;
     }
 
+    //void SetPho(PhOHeuristic<width, height, MNPuzzleState<width, height>, slideDir, MNPuzzle<width, height>> *pho) {phoSet = true; this->pho = pho;}
+
 private:
+    //PhOHeuristic<width, height, MNPuzzleState<width, height>, slideDir, MNPuzzle<width, height>> *pho;
+    //bool phoSet = false;
     bool pattern[width * height];
 //	double DoPDBLookup(const MNPuzzleState<width, height> &state);
 //	std::vector<std::vector<uint8_t> > PDB;
@@ -677,6 +682,9 @@ double MNPuzzle<width, height>::HCost(const MNPuzzleState<width, height> &state1
 template<int width, int height>
 double MNPuzzle<width, height>::HCost(const MNPuzzleState<width, height> &state1,
                                       const MNPuzzleState<width, height> &state2) const {
+    //if (phoSet){
+    //    return pho->HCost(state1, state2);
+    //}
     if (goal_stored)
         return HCost(state1);
 //	if (state1.height != height || state1.width != width)
@@ -816,7 +824,6 @@ double MNPuzzle<width, height>::ConflictH(const MNPuzzleState<width, height> &st
             }
         }
     }
-    //std::cout << conflicts << std::endl;
     return conflicts;
 }
 
