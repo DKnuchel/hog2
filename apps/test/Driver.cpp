@@ -22,7 +22,7 @@
 #endif
 //#define PUZZLE_SIZE @PUZZLE_SIZE@
 const int width = SIZE, height = SIZE;
-//const int width = 2, height = 2;
+//const int width = 2, height = 3;
 
 enum MODE {
     MD,
@@ -102,6 +102,7 @@ void StaticPDB();
 void PhO(bool dual, bool is_integer);
 
 void Generate();
+
 void Test();
 
 std::vector<std::vector<int>> extractPDBPattern(std::string str);
@@ -226,8 +227,8 @@ void BasicHeuristics() {
         goal.Reset();
         IDAStar<MNPuzzleState<width, height>, slideDir> ida;
         ida.GetPath(&mnp, start, goal, path);
-        printf("ida\tLength: %1.2f\tExpanded: %lu\tGenerated: %lu\tTime: %1.2f\n",
-               mnp.GetPathLength(start, path), ida.GetNodesExpanded(),
+        printf("ida\tInitialH: %1.2f\tLength: %1.2f\tExpanded: %lu\tGenerated: %lu\tTime: %1.2f\n",
+               ida.initialH, mnp.GetPathLength(start, path), ida.GetNodesExpanded(),
                ida.GetNodesTouched(), t.EndTimer());
     }
 }
@@ -248,7 +249,7 @@ void StaticPDB() {
     }
 
     h.lookups.resize(0);
-    h.lookups.push_back({kAddNode, 1,3});
+    h.lookups.push_back({kAddNode, 1, 3});
     h.lookups.push_back({kLeafNode, 0, 0});
     h.lookups.push_back({kLeafNode, 1, 1});
     if (opt.patterns.size() > 2) h.lookups.push_back({kLeafNode, 2, 2});
@@ -273,8 +274,8 @@ void StaticPDB() {
         ida.SetHeuristic(&h);
         std::vector<slideDir> path;
         ida.GetPath(&mnp, start, goal, path);
-        printf("ida\tLength: %1.2f\tExpanded: %lu\tGenerated: %lu\tTime: %1.2f\n",
-               mnp.GetPathLength(start, path), ida.GetNodesExpanded(),
+        printf("ida\tInitialH: %1.2f\tLength: %1.2f\tExpanded: %lu\tGenerated: %lu\tTime: %1.2f\n",
+               ida.initialH, mnp.GetPathLength(start, path), ida.GetNodesExpanded(),
                ida.GetNodesTouched(), t.EndTimer());
     }
 }
@@ -284,9 +285,9 @@ void Test() {
     MNPuzzleState<width, height> start, goal;
     goal.Reset();
     mnp.StoreGoal(goal);
-    std::vector<int> p = {0,1,2};
+    std::vector<int> p = {0, 1, 2};
     mnp.SetPattern(p);
-    start.puzzle = {1,2,0,3};
+    start.puzzle = {1, 2, 0, 3};
     //LexPermutationPDB<MNPuzzleState<width, height>, slideDir, MNPuzzle<width, height>> pdb(&mnp, goal, p);
     LexPermutationPDB<MNPuzzleState<width, height>, slideDir, MNPuzzle<width, height>> pdb2(&mnp, goal, p);
     //start.puzzle = {2,1,0,4,5,3};
@@ -297,9 +298,10 @@ void Test() {
         std::cout << pdb.PDB.Get(i) << ", ";
     }std::cout << std::endl;
      */
-    for(int i = 0; i < pdb2.PDB.Size(); ++i) {
+    for (int i = 0; i < pdb2.PDB.Size(); ++i) {
         std::cout << pdb2.PDB.Get(i) << ", ";
-    }std::cout << std::endl;
+    }
+    std::cout << std::endl;
     //std::cout << pdb.HCost(start, goal) << std::endl;
 }
 
@@ -363,8 +365,8 @@ void PhO(bool dual, bool is_integer) {
         ida.GetPath(&mnp, start, goal, path);
         //std::vector<MNPuzzleState<width,height>> spath;
         //ida.GetPath(&mnp, start, goal, spath);
-        printf("ida\tLength: %1.2f\tExpanded: %lu\tGenerated: %lu\tTime: %1.2f\n",
-               mnp.GetPathLength(start, path), ida.GetNodesExpanded(),
+        printf("ida\tInitialH: %1.2f\tLength: %1.2f\tExpanded: %lu\tGenerated: %lu\tTime: %1.2f\n",
+               ida.initialH, mnp.GetPathLength(start, path), ida.GetNodesExpanded(),
                ida.GetNodesTouched(), t.EndTimer());
     }
 }

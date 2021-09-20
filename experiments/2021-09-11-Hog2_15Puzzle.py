@@ -39,14 +39,14 @@ ALGORITHMS = {
    "md": ["-m", "MD"] ,
    "lc": ["-m", "LC"] ,
    "static 7-8": ["-m", "PDB", "--static", "-p", "((1,2,3,4,5,6,7)(8,9,10,11,12,13,14,15))"] ,
-   #"static": ["-m", "PDB", "--static", "-p", "((1,2,4,5,8)(3,6,7,10,11)(9,12,13,14,15))"] ,
-   #"static": ["-m", "PDB", "--static", "-p", "((1,2,4,5,8,9)(3,6,7,10,11,15)(12,13,14))"] ,
+   "static 5-5-5": ["-m", "PDB", "--static", "-p", "((1,2,4,5,8)(3,6,7,10,11)(9,12,13,14,15))"] ,
+   "static 6-6-3": ["-m", "PDB", "--static", "-p", "((1,2,4,5,8,9)(3,6,7,10,11,15)(12,13,14))"] ,
 
 
-   #"pho-primal": ["-m", "PDB", "--pho", "-p", "4"] ,
-   #"pho-dual": ["-m", "PDB", "--pho", "-p", "4"] ,
-   #"wvc-primal": ["-m", "PDB", "--pho", "-p", "4", "--integer"] ,
-   #"wvc-dual": ["-m", "PDB", "--pho", "-p", "4", "--integer", "--dual"] ,
+   "pho-primal": ["-m", "PDB", "--pho", "-p", "4"] ,
+   "pho-dual": ["-m", "PDB", "--pho", "-p", "4", "--dual"] ,
+   "wvc-primal": ["-m", "PDB", "--pho", "-p", "4", "--integer"] ,
+   "wvc-dual": ["-m", "PDB", "--pho", "-p", "4", "--integer", "--dual"] ,
 }
 
 for algo_name, algo_params in ALGORITHMS.items():
@@ -105,6 +105,7 @@ class BaseReport(AbsoluteReport):
 
 
 ATTRIBUTES = [
+    Attribute("initial", min_wins=False),
     Attribute("length", min_wins=True),
     Attribute("expansions", min_wins=True, function=geometric_mean),
     Attribute("generated", min_wins=True, function=geometric_mean),

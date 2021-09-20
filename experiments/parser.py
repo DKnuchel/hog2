@@ -3,11 +3,11 @@
 from lab.parser import Parser
 
 parser = Parser()
+parser.add_pattern('initial', 'InitialH: (\d+)', required=False, type=int)
 parser.add_pattern('length', 'Length: (\d+)', required=False, type=int) # "adsfakj alsdjfasdf solution length: 23123 adslfkjasdkfjasd"
-parser.add_pattern('expansions', 'Expanded: (\d+): ', required=False, type=int)
+parser.add_pattern('expansions', 'Expanded: (\d+)', required=False, type=int)
 parser.add_pattern('generated', 'Generated: (\d+)', required=False, type=int)
 parser.add_pattern('time', 'Time: (.+)', required=False, type=float) # runtime: 123.123s
-#parser.add_pattern('initial_h_value', '', required=False, type=int)
 
 def parse_lines(content, props):
     hog2_return_value_solution = None
