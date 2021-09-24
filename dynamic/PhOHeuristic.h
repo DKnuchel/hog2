@@ -8,9 +8,9 @@ template<int width, int height, class state, class action, class environment>
 class PhOHeuristic : public Heuristic<state> {
 
 public:
-    PhOHeuristic(Heuristic<state> *h, state goal, bool dual = false, bool is_integer = false) : heur(h), goal(goal),
+    PhOHeuristic(Heuristic<state> *h, state goal, bool dual = false, bool is_integer = false, bool resolve = false) : heur(h), goal(goal),
                                                                                                 dual(dual), is_integer(
-                    is_integer) {
+                    is_integer), resolveLP(resolve) {
         lps.reset(new lp::LPSolver(lp::LPSolverType::CPLEX));
     };
 

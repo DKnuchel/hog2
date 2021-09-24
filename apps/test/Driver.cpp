@@ -49,6 +49,7 @@ typedef struct options {
     int patternMaxOrder;
     bool isInteger = false;
     bool isFiltered = false;
+    bool resolve = false;
 
     bool puzzlePathSet = false;
     bool patternsSet = false;
@@ -99,7 +100,7 @@ void BasicHeuristics();
 
 void StaticPDB();
 
-void PhO(bool dual, bool is_integer);
+void PhO(bool dual, bool is_integer, bool resolve);
 
 void Generate();
 
@@ -136,15 +137,15 @@ int main(int argc, const char *argv[]) {
                     StaticPDB();
                     break;
                 case DYNAMIC:
-                    PhO(true, true);
+                    PhO(true, true, opt.resolve);
                     break;
                 case PHO:
                     switch (opt.phoMode) {
                         case PRIME:
-                            PhO(false, opt.isInteger);
+                            PhO(false, opt.isInteger, opt.resolve);
                             break;
                         case DUAL:
-                            PhO(true, opt.isInteger);
+                            PhO(true, opt.isInteger, opt.resolve);
                             break;
                     }
                     break;
@@ -204,6 +205,8 @@ options getOptions(int argc, const char *const *argv) {
             _opt.pdbPathSet = true;
         } else if (static_cast<std::string>(argv[i]) == "--filtered") {
             _opt.isFiltered = true;
+        } else if (static_cast<std::string>(argv[i]) == "--resolve") {
+            _opt.resolve = true;
         }
     }
     if (!_opt.checkOptions())
@@ -305,7 +308,7 @@ void Test() {
     //std::cout << pdb.HCost(start, goal) << std::endl;
 }
 
-void PhO(bool dual, bool is_integer) {
+void PhO(bool dual, bool is_integer, bool resolve) {
     MNPuzzle<width, height> mnp;//({kRight, kLeft, kDown, kUp});
     Heuristic<MNPuzzleState<width, height>> h1;
     MNPuzzleState<width, height> start, goal;
@@ -335,7 +338,7 @@ void PhO(bool dual, bool is_integer) {
     }
 
     PhOHeuristic<width, height, MNPuzzleState<width, height>, slideDir, MNPuzzle<width, height>> pho(&h1, goal, dual,
-                                                                                                     is_integer);
+                                                                                                     is_integer, resolve);
     pho.SetSortedPatterns();
 
     Heuristic<MNPuzzleState<width, height>> h2;

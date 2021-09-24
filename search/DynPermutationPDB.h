@@ -164,11 +164,12 @@ inline bool checkIfFileExists(const std::string &name) {
 template<int width, int height, class state, class action, class environment>
 std::vector<LexPermutationPDB<state, action, environment>>
 DynPermutationPDB<width, height, state, action, environment>::GetPDBs(std::string path) {
-    if (!isFiltered || !checkIfFileExists(path + "yeeted")) {
-        if (order > 1) BuildPairsPDBs(path);
-        if (order > 2) BuildTripletsPDBs(path);
-        if (order > 3) BuildQuadrupletsPDBS(path);
-    } else {
+    //if (!isFiltered || !checkIfFileExists(path + "yeeted")) {
+    if (order > 1) BuildPairsPDBs(path);
+    if (order > 2) BuildTripletsPDBs(path);
+    if (order > 3) BuildQuadrupletsPDBS(path);
+    /*
+       } else {
         for (auto &pattern: getNonarbitraryPatterns(path + "yeeted")) {
             LexPermutationPDB<state, action, environment> pdb(env, *goal, pattern);
             if (!pdb.Load(path.c_str())) {
@@ -178,7 +179,7 @@ DynPermutationPDB<width, height, state, action, environment>::GetPDBs(std::strin
             }
             pdbs.push_back(pdb);
         }
-    }
+    }*/
     return pdbs;
 }
 
@@ -222,10 +223,10 @@ DynPermutationPDB<width, height, state, action, environment>::YeetPDB(LexPermuta
         }
     }
     //To reach this point, there exists no additive partitioning of the pattern with the same optimality.
-    std::ofstream file(path + "yeeted", std::fstream::app);
-    for (auto &t: distinct) file << t << " ";
-    file << "\n";
-    file.close();
+    //std::ofstream file(path + "yeeted", std::fstream::app);
+    //for (auto &t: distinct) file << t << " ";
+    //file << "\n";
+    //file.close();
     return false;
 }
 
