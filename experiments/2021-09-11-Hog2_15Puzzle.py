@@ -24,7 +24,7 @@ if REMOTE:
 else:
     ENV = LocalEnvironment(processes=2)
     # Use smaller suite for local tests.
-    SUITE = ['korf10'] #, 'korf20', 'korf30', 'korf40']
+    SUITE = ['korf10', 'korf20', 'korf30', 'korf40']
 
 
 # Create a new experiment.
@@ -57,7 +57,7 @@ for algo_name, algo_params in ALGORITHMS.items():
         # print(os.path.dirname(os.path.realpath(__file__)))
         run.add_command(
             "solve",
-            ["{hog2}", "-i", "{input}/" + str(puzzle_instance) + ".pzl" , "-d", "{pdb}/", *algo_params],
+            ["{hog2}", "-i", "{input}/" + str(puzzle_instance) + ".pzl" , "-d", "{pdb}/", "--resolve", *algo_params],
             time_limit=TIME_LIMIT,
             memory_limit=MEMORY_LIMIT,
         )
@@ -110,6 +110,7 @@ ATTRIBUTES = [
     Attribute("expansions", min_wins=True, function=geometric_mean),
     Attribute("generated", min_wins=True, function=geometric_mean),
     Attribute("time", min_wins=True, function=geometric_mean),
+    Attribute("coverage", min_wins=False, absolute=True, scale='linear'),
 ]
 # Make a report.
 exp.add_report(BaseReport(attributes=ATTRIBUTES), outfile="report.html")
