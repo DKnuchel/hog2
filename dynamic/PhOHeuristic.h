@@ -41,6 +41,8 @@ private:
 
     constexpr static int tiles = width * height - 1;
 
+    const double epsilon = 0.00001;
+
 protected:
     bool is_integer = false;
     bool dual = false;
@@ -53,10 +55,11 @@ double PhOHeuristic<width, height, state, action, environment>::HCost(const stat
     //if(sortedPatterns.empty())
     //   SetSortedPatterns();
     if (!dual) {
-        return GetPhOHeuristic(a);
+        return std::floor(GetPhOHeuristic(a) + epsilon);
     } else {
-        return GetPhOHDualHeuristic(a);
+        return std::floor(GetPhOHDualHeuristic(a) + epsilon);
     }
+
 }
 
 template<int width, int height, class state, class action, class environment>
@@ -106,7 +109,8 @@ double PhOHeuristic<width, height, state, action, environment>::GetPhOHeuristic(
         UpdatePhoHeuristic(a);
     }
     lps->solve(); //X_1 + X_2 + X_4 >= heur{1,2,4}
-    return std::floor(lps->get_objective_value());
+    //return static_cast<int>(std::floor(lps->get_objective_value()));
+    return lps->get_objective_value();
 }
 
 template<int width, int height, class state, class action, class environment>
@@ -157,7 +161,8 @@ double PhOHeuristic<width, height, state, action, environment>::GetPhOHDualHeuri
     UpdatePhoDualHeuristic(a);
     }
     lps->solve();
-    return std::floor(lps->get_objective_value());
+    //return static_cast<int>(std::floor(lps->get_objective_value()));
+    return lps->get_objective_value();
 }
 
 
