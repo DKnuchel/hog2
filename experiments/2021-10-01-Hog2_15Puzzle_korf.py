@@ -21,7 +21,7 @@ MEMORY_LIMIT = 6354
 
 if REMOTE:
     ENV = BaselSlurmEnvironment(partition="infai_2", memory_per_cpu="6354M", email="damian.knuchel@unibas.ch",setup='export PATH=/scicore/soft/apps/binutils/2.32-GCCcore-8.3.0/bin:/scicore/soft/apps/CMake/3.15.3-GCCcore-8.3.0/bin:/scicore/soft/apps/cURL/7.66.0-GCCcore-8.3.0/bin:/scicore/soft/apps/bzip2/1.0.8-GCCcore-8.3.0/bin:/scicore/soft/apps/ncurses/6.1-GCCcore-8.3.0/bin:/scicore/soft/apps/GCCcore/8.3.0/bin:/export/soft/lua_lmod/centos7/lmod/lmod/libexec:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/infai/nokyri32/bin:/scicore/soft/apps/binutils/2.32-GCCcore-8.3.0/lib:/scicore/soft/apps/cURL/7.66.0-GCCcore-8.3.0/lib:/scicore/soft/apps/bzip2/1.0.8-GCCcore-8.3.0/lib:/scicore/soft/apps/zlib/1.2.11-GCCcore-8.3.0/lib:/scicore/soft/apps/ncurses/6.1-GCCcore-8.3.0/lib:/scicore/soft/apps/GCCcore/8.3.0/lib64:/scicore/soft/apps/GCCcore/8.3.0/lib')
-    SUITE = range(1000)
+    SUITE = range(100)
 else:
     ENV = LocalEnvironment(processes=2)
     # Use smaller suite for local tests.
@@ -52,14 +52,14 @@ ALGORITHMS = {
 
 for algo_name, algo_params in ALGORITHMS.items():
     for puzzle_instance in SUITE:
-        puzzle_instance = str(puzzle_instance)
+        puzzle_instance = "korf" + puzzle_instance
         run = exp.add_run()
         # Create a symbolic link and an alias. This is optional. We
         # could also use absolute paths in add_command().
         # print(os.path.dirname(os.path.realpath(__file__)))
         run.add_command(
             "solve",
-            ["{hog2}", "-i", "{input}/" + str(puzzle_instance) + ".pzl" , "-d", "{pdb}/", "--resolve", *algo_params],
+            ["{hog2}", "-i", "{input}/" + puzzle_instance + ".pzl" , "-d", "{pdb}/", "--resolve", *algo_params],
             time_limit=TIME_LIMIT,
             memory_limit=MEMORY_LIMIT,
         )
