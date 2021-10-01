@@ -127,35 +127,35 @@ report_initial_phop_static = ScatterPlotReport(
         matplotlib_options=matplotlib_options,
         format="tex"
     )
-report_initial_phop_dynp ScatterPlotReport(
+report_initial_phop_dynp = ScatterPlotReport(
         attributes=["initial"],
         filter_algorithm=["pho-primal", "wvc-primal"],
         matplotlib_options=matplotlib_options,
         format="tex"
     )
 
-report_initial_dynp_dynd ScatterPlotReport(
+report_initial_dynp_dynd = ScatterPlotReport(
         attributes=["initial"],
         filter_algorithm=["wvc-primal", "wvc-dual"],
         matplotlib_options=matplotlib_options,
         format="tex"
     )
 
-report_expanded_phop_static ScatterPlotReport(
+report_expanded_phop_static = ScatterPlotReport(
         attributes=["expansions"],
         filter_algorithm=["pho-primal", "static 7-8"],
         matplotlib_options=matplotlib_options,
         format="tex"
     )
 
-report_expanded_phop_dynp ScatterPlotReport(
+report_expanded_phop_dynp = ScatterPlotReport(
         attributes=["expansions"],
         filter_algorithm=["pho-primal", "wvc-primal"],
         matplotlib_options=matplotlib_options,
         format="tex"
     )
 
-report_expanded_dynp_dynd ScatterPlotReport(
+report_expanded_dynp_dynd = ScatterPlotReport(
         attributes=["expansions"],
         filter_algorithm=["wvc-primal", "wvc-dual"],
         matplotlib_options=matplotlib_options,
