@@ -52,7 +52,7 @@ ALGORITHMS = {
 
 for algo_name, algo_params in ALGORITHMS.items():
     for puzzle_instance in SUITE:
-        puzzle_instance = "korf" + puzzle_instance
+        puzzle_instance = "korf" + str(puzzle_instance)
         run = exp.add_run()
         # Create a symbolic link and an alias. This is optional. We
         # could also use absolute paths in add_command().
