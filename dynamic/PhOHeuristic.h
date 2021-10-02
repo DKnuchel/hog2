@@ -36,7 +36,7 @@ private:
     Heuristic<state> *heur;
     state goal;
     mutable bool firstRun = true;
-    bool resolveLP = true;
+    bool resolveLP = false;
     mutable std::unique_ptr<lp::LPSolver> lps;
 
     constexpr static int tiles = width * height - 1;
