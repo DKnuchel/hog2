@@ -50,6 +50,7 @@ typedef struct options {
     bool isInteger = false;
     bool isFiltered = false;
     bool resolve = false;
+    bool test = false;
 
     bool puzzlePathSet = false;
     bool patternsSet = false;
@@ -207,6 +208,8 @@ options getOptions(int argc, const char *const *argv) {
             _opt.isFiltered = true;
         } else if (static_cast<std::string>(argv[i]) == "--resolve") {
             _opt.resolve = true;
+        } else if (static_cast<std::string>(argv[i]) == "--test") {
+            _opt.test = true;
         }
     }
     if (!_opt.checkOptions())
@@ -283,31 +286,6 @@ void StaticPDB() {
     }
 }
 
-void Test() {
-    MNPuzzle<width, height> mnp({kRight, kLeft, kDown, kUp});
-    MNPuzzleState<width, height> start, goal;
-    goal.Reset();
-    mnp.StoreGoal(goal);
-    std::vector<int> p = {0, 1, 2};
-    mnp.SetPattern(p);
-    start.puzzle = {1, 2, 0, 3};
-    //LexPermutationPDB<MNPuzzleState<width, height>, slideDir, MNPuzzle<width, height>> pdb(&mnp, goal, p);
-    LexPermutationPDB<MNPuzzleState<width, height>, slideDir, MNPuzzle<width, height>> pdb2(&mnp, goal, p);
-    //start.puzzle = {2,1,0,4,5,3};
-    /*
-    pdb.Load("./pdbs/");
-    pdb2.BuildAdditivePDB(goal, 4);
-    for(int i = 0; i < pdb.PDB.Size(); ++i) {
-        std::cout << pdb.PDB.Get(i) << ", ";
-    }std::cout << std::endl;
-     */
-    for (int i = 0; i < pdb2.PDB.Size(); ++i) {
-        std::cout << pdb2.PDB.Get(i) << ", ";
-    }
-    std::cout << std::endl;
-    //std::cout << pdb.HCost(start, goal) << std::endl;
-}
-
 void PhO(bool dual, bool is_integer, bool resolve) {
     MNPuzzle<width, height> mnp;//({kRight, kLeft, kDown, kUp});
     Heuristic<MNPuzzleState<width, height>> h1;
@@ -320,7 +298,7 @@ void PhO(bool dual, bool is_integer, bool resolve) {
 
     DynPermutationPDB<width, height, MNPuzzleState<width, height>, slideDir, MNPuzzle<width, height>> pdb(&mnp,
                                                                                                           opt.patternMaxOrder);
-    pdb.SetFiltered(opt.isFiltered);
+    pdb.SetFiltered(false);
 
     pdb.SetGoal(&goal);
 
@@ -337,9 +315,17 @@ void PhO(bool dual, bool is_integer, bool resolve) {
         h1.heuristics.push_back(&i);
     }
 
-    PhOHeuristic<width, height, MNPuzzleState<width, height>, slideDir, MNPuzzle<width, height>> pho(&h1, goal, dual,
+    PhOHeuristic<width, height, MNPuzzleState<width, height>, slideDir, MNPuzzle<width, height>> pho(&h1, goal, std::move(std::string(opt.pdbPath)), dual,
                                                                                                      is_integer, resolve);
     pho.SetSortedPatterns();
+    if(opt.isFiltered) {
+        std::cout << "Filtered" << std::endl;
+        pho.setFiltered();
+        pho.setTest();
+    }
+    if(opt.test) {
+        pho.setTest();
+    }
 
     Heuristic<MNPuzzleState<width, height>> h2;
     h2.lookups.resize(0);
