@@ -14,6 +14,7 @@
 #include <fstream>
 #include <sys/stat.h>
 #include <string>
+#include <utility>
 
 template<const int width, const int height, class state, class action, class environment>
 class DynPermutationPDB {
@@ -26,16 +27,28 @@ public:
 
     void SetFiltered(bool b) { this->isFiltered = b; };
 
+    void SetPatterns(std::vector<std::vector<int>> patterns) {
+        pat = std::move(patterns);
+        staticPatterns = true;
+    };
+
 private:
     environment *env;
     state *goal;
     int order;
+
+    std::vector<std::vector<int>> pat;
+
+    bool staticPatterns = false;
 
     void BuildPairsPDBs(const std::string &path);
 
     void BuildTripletsPDBs(const std::string &path);
 
     void BuildQuadrupletsPDBS(const std::string &path);
+
+    void BuildStaticPDBS(const std::string &path);
+
 
     bool YeetPDB(LexPermutationPDB<state, action, environment> pdb, const std::string &path);
 
@@ -165,9 +178,13 @@ template<int width, int height, class state, class action, class environment>
 std::vector<LexPermutationPDB<state, action, environment>>
 DynPermutationPDB<width, height, state, action, environment>::GetPDBs(std::string path) {
     //if (!isFiltered || !checkIfFileExists(path + "yeeted")) {
-    if (order > 1) BuildPairsPDBs(path);
-    if (order > 2) BuildTripletsPDBs(path);
-    if (order > 3) BuildQuadrupletsPDBS(path);
+    if (!staticPatterns) {
+        if (order > 1) BuildPairsPDBs(path);
+        if (order > 2) BuildTripletsPDBs(path);
+        if (order > 3) BuildQuadrupletsPDBS(path);
+    } else {
+        BuildStaticPDBS(path);
+    }
     /*
        } else {
         for (auto &pattern: getNonarbitraryPatterns(path + "yeeted")) {
@@ -278,5 +295,19 @@ double DynPermutationPDB<width, height, state, action, environment>::GetTileManD
     unsigned int yS = std::floor(itS / width);
     return (std::abs((int) (xG - xS))) + (std::abs((int) (yG - yS)));
 }
+
+template<const int width, const int height, class state, class action, class environment>
+void DynPermutationPDB<width, height, state, action, environment>::BuildStaticPDBS(const std::string &path) {
+    for (auto &pattern: pat) {
+        LexPermutationPDB<state, action, environment> pdb(env, *goal, pattern);
+        if (!pdb.Load(path.c_str())) {
+            env->SetPattern(pattern);
+            pdb.BuildAdditivePDB(*goal, threads);
+            pdb.Save(path.c_str());
+        }
+        pdbs.push_back(pdb);
+    }
+}
+
 
 #endif /* DynPermutationPDB_h */

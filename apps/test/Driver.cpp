@@ -51,6 +51,7 @@ typedef struct options {
     bool isFiltered = false;
     bool resolve = false;
     bool test = false;
+    bool sevenTest = false;
 
     bool puzzlePathSet = false;
     bool patternsSet = false;
@@ -210,6 +211,8 @@ options getOptions(int argc, const char *const *argv) {
             _opt.resolve = true;
         } else if (static_cast<std::string>(argv[i]) == "--test") {
             _opt.test = true;
+        } else if (static_cast<std::string>(argv[i]) == "--seven") {
+            _opt.sevenTest = true;
         }
     }
     if (!_opt.checkOptions())
@@ -299,7 +302,18 @@ void PhO(bool dual, bool is_integer, bool resolve) {
     DynPermutationPDB<width, height, MNPuzzleState<width, height>, slideDir, MNPuzzle<width, height>> pdb(&mnp,
                                                                                                           opt.patternMaxOrder);
     pdb.SetFiltered(false);
-
+    if (opt.sevenTest)
+        pdb.SetPatterns({{0, 1, 2,  3,  4,  5,  6,  8},
+                         {0, 7, 10, 11, 12, 13, 14, 15},
+                         {0, 1, 2,  3,  4,  5,  6,  7},
+                         {0, 2, 3,  4,  5,  6,  7,  8},
+                         {0, 3, 4,  5,  6,  7,  8,  9},
+                         {0, 4, 5,  6,  7,  8,  9,  10},
+                         {0, 5, 6,  7,  8,  9,  10, 11},
+                         {0, 6, 7,  8,  9,  10, 11, 12},
+                         {0, 7, 8,  9,  10, 11, 12, 13},
+                         {0, 8, 9,  10, 11, 12, 13, 14},
+                         {0, 9, 10, 11, 12, 13, 14, 15}});
     pdb.SetGoal(&goal);
 
     std::vector<LexPermutationPDB<MNPuzzleState<width, height>, slideDir, MNPuzzle<width, height>>> pdbs = pdb.GetPDBs(
@@ -315,15 +329,20 @@ void PhO(bool dual, bool is_integer, bool resolve) {
         h1.heuristics.push_back(&i);
     }
 
-    PhOHeuristic<width, height, MNPuzzleState<width, height>, slideDir, MNPuzzle<width, height>> pho(&h1, goal, std::move(std::string(opt.pdbPath)), dual,
-                                                                                                     is_integer, resolve);
+    PhOHeuristic<width, height, MNPuzzleState<width, height>, slideDir, MNPuzzle<width, height>> pho(&h1, goal,
+                                                                                                     std::move(
+                                                                                                             std::string(
+                                                                                                                     opt.pdbPath)),
+                                                                                                     dual,
+                                                                                                     is_integer,
+                                                                                                     resolve);
     pho.SetSortedPatterns();
-    if(opt.isFiltered) {
+    if (opt.isFiltered) {
         std::cout << "Filtered" << std::endl;
         pho.setFiltered();
         pho.setTest();
     }
-    if(opt.test) {
+    if (opt.test) {
         pho.setTest();
     }
 
@@ -433,14 +452,26 @@ void Generate() {
         }
         file.close();
     }
-    opt.patterns = {{0,  1,  2,  3,  4,  5,  6,  7},
+    opt.patterns = {
                     {0,  8,  9,  10, 11, 12, 13, 14, 15},
                     {0,  1,  2,  4,  5,  8},
                     {0,  3,  6,  7,  10, 11},
                     {0,  9,  12, 13, 14, 15},
                     {0,  1,  2,  4,  5,  8,  9},
                     {0,  3,  6,  7,  10, 11, 15},
-                    {0,  12, 13, 14}};
+                    {0,  12, 13, 14},
+                    {0,  1,  2,  3,  4,  5,  6,  8},
+                    {0,  7,  10, 11, 12, 13, 14, 15},
+                    {0,  1,  2,  3,  4,  5,  6,  7},
+                    {0,  2,  3,  4,  5,  6,  7,  8},
+                    {0,  3,  4,  5,  6,  7,  8,  9},
+                    {0,  4,  5,  6,  7,  8,  9,  10},
+                    {0,  5,  6,  7,  8,  9,  10, 11},
+                    {0,  6,  7,  8,  9,  10, 11, 12},
+                    {0,  7,  8,  9,  10, 11, 12, 13},
+                    {0,  8,  9,  10, 11, 12, 13, 14},
+                    {0,  9,  10, 11, 12, 13, 14, 15}
+                    };
 #elif PUZZLE_SIZE == 5
     opt.patterns = {{0, 1,  5,  6,  10, 11, 12},
                     {0, 2,  3,  4,  7,  8,  9},
