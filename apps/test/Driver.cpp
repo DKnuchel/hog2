@@ -303,8 +303,8 @@ void PhO(bool dual, bool is_integer, bool resolve) {
                                                                                                           opt.patternMaxOrder);
     pdb.SetFiltered(false);
     if (opt.sevenTest)
-        pdb.SetPatterns({{0, 1, 2,  3,  4,  5,  6,  8},
-                         {0, 7, 10, 11, 12, 13, 14, 15},
+        pdb.SetPatterns({//{0, 1, 2,  3,  4,  5,  6,  8},
+                        // {0, 7, 10, 11, 12, 13, 14, 15},
                          {0, 1, 2,  3,  4,  5,  6,  7},
                          {0, 2, 3,  4,  5,  6,  7,  8},
                          {0, 3, 4,  5,  6,  7,  8,  9},
