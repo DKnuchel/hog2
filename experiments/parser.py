@@ -3,7 +3,7 @@
 from lab.parser import Parser
 
 parser = Parser()
-parser.add_pattern('initial', 'InitialH: (\d+)', required=False, type=int)
+parser.add_pattern('initial', 'initial: (\d+)', required=False, type=int)
 parser.add_pattern('length', 'Length: (\d+)', required=False,
                    type=int)  # "adsfakj alsdjfasdf solution length: 23123 adslfkjasdkfjasd"
 parser.add_pattern('expansions', 'Expanded: (\d+)', required=False, type=int)
@@ -14,7 +14,7 @@ parser.add_pattern('time', 'Time: (.+)', required=False, type=float)  # runtime:
 def parse_lines(content, props):
     hog2_return_value_solution = None
     for line in content.splitlines():
-        if "ida" in line:
+        if "ida" in line or "initial" in line:
             hog2_return_value_solution = True
 
     if hog2_return_value_solution is None:

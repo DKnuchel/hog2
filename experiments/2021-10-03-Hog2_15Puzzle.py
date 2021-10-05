@@ -25,7 +25,7 @@ if REMOTE:
 else:
     ENV = LocalEnvironment(processes=2)
     # Use smaller suite for local tests.
-    SUITE = ['korf10', 'korf20']#, 'korf30', 'korf40']
+    SUITE = ['0', '1', '2']#, 'korf30', 'korf40']
 
 
 # Create a new experiment.

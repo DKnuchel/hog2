@@ -52,8 +52,6 @@ public:
         }
     }
 
-    double initialH = 0.0;
-
 private:
     unsigned long long nodesExpanded, nodesTouched;
 
@@ -141,7 +139,7 @@ void IDAStar<state, action, verbose>::GetPath(SearchEnvironment<state, action> *
         return;
 
     double rootH = heuristic->HCost(from, to);
-    this->initialH = rootH;
+    std::cout << "initial: " << rootH << std::endl;
     UpdateNextBound(0, rootH);
     goal = to;
     std::vector<action> act;

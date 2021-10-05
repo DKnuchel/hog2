@@ -236,8 +236,7 @@ void BasicHeuristics() {
         goal.Reset();
         IDAStar<MNPuzzleState<width, height>, slideDir> ida;
         ida.GetPath(&mnp, start, goal, path);
-        printf("ida\tInitialH: %1.2f\tLength: %1.2f\tExpanded: %lu\tGenerated: %lu\tTime: %1.2f\n",
-               ida.initialH, mnp.GetPathLength(start, path), ida.GetNodesExpanded(),
+        printf("ida\tLength: %1.2f\tExpanded: %lu\tGenerated: %lu\tTime: %1.2f\n", mnp.GetPathLength(start, path), ida.GetNodesExpanded(),
                ida.GetNodesTouched(), t.EndTimer());
     }
 }
@@ -283,8 +282,7 @@ void StaticPDB() {
         ida.SetHeuristic(&h);
         std::vector<slideDir> path;
         ida.GetPath(&mnp, start, goal, path);
-        printf("ida\tInitialH: %1.2f\tLength: %1.2f\tExpanded: %lu\tGenerated: %lu\tTime: %1.2f\n",
-               ida.initialH, mnp.GetPathLength(start, path), ida.GetNodesExpanded(),
+        printf("ida\tLength: %1.2f\tExpanded: %lu\tGenerated: %lu\tTime: %1.2f\n", mnp.GetPathLength(start, path), ida.GetNodesExpanded(),
                ida.GetNodesTouched(), t.EndTimer());
     }
 }
@@ -373,8 +371,7 @@ void PhO(bool dual, bool is_integer, bool resolve) {
         ida.GetPath(&mnp, start, goal, path);
         //std::vector<MNPuzzleState<width,height>> spath;
         //ida.GetPath(&mnp, start, goal, spath);
-        printf("ida\tInitialH: %1.2f\tLength: %1.2f\tExpanded: %lu\tGenerated: %lu\tTime: %1.2f\n",
-               ida.initialH, mnp.GetPathLength(start, path), ida.GetNodesExpanded(),
+        printf("ida\tLength: %1.2f\tExpanded: %lu\tGenerated: %lu\tTime: %1.2f\n", mnp.GetPathLength(start, path), ida.GetNodesExpanded(),
                ida.GetNodesTouched(), t.EndTimer());
     }
 }
