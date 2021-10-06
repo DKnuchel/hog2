@@ -140,6 +140,7 @@ void IDAStar<state, action, verbose>::GetPath(SearchEnvironment<state, action> *
 
     double rootH = heuristic->HCost(from, to);
     std::cout << "initial: " << rootH << std::endl;
+    exit(0);
     UpdateNextBound(0, rootH);
     goal = to;
     std::vector<action> act;
